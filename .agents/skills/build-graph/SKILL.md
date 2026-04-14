@@ -1,38 +1,40 @@
 ---
 name: build-graph
-description: Build or update the code review knowledge graph. Run this first to initialize, or let hooks keep it updated automatically.
-argument-hint: "[full]"
+description: Builds or updates the code knowledge graph for a repository. Use before running code reviews or architecture analysis for the first time.
 ---
 
 # Build Graph
 
-Build or incrementally update the persistent code knowledge graph for this repository.
+Initialize or update the code knowledge graph for this repository.
 
-## Steps
+## When to use this skill
 
-1. **Check graph status** by calling the `list_graph_stats_tool` MCP tool.
-   - If the graph has never been built (last_updated is null), proceed with a full build.
-   - If the graph exists, proceed with an incremental update.
-
-2. **Build the graph** by calling the `build_or_update_graph_tool` MCP tool:
-   - For first-time setup: `build_or_update_graph_tool(full_rebuild=True)`
-   - For updates: `build_or_update_graph_tool()` (incremental by default)
-
-3. **Verify** by calling `list_graph_stats_tool` again and report the results:
-   - Number of files parsed
-   - Number of nodes and edges created
-   - Languages detected
-   - Any errors encountered
-
-## When to Use
-
-- First time setting up the graph for a repository
+- First time analyzing a repository
 - After major refactoring or branch switches
-- If the graph seems stale or out of sync
-- The graph auto-updates via hooks on edit/commit, so manual builds are rarely needed
+- If analysis results seem stale or incomplete
 
-## Notes
+## How to use it
 
-- The graph is stored as a SQLite database (`.code-graph/graph.db`) in the repo root
-- Binary files, generated files, and patterns in `.code-graphignore` are skipped
-- Supported languages: Python, TypeScript/JavaScript, Vue, Go, Rust, Java, Scala, C#, Ruby, Kotlin, Swift, PHP, Solidity, C/C++
+### With shell scripts (zero dependency)
+
+The graph is implicitly built when you run analysis scripts:
+```bash
+bash skills/code-graph/scripts/blast-radius.sh
+bash skills/code-graph/scripts/hub-detect.sh
+```
+These scripts scan the codebase on each run — no separate build step needed.
+
+### With the Python engine (if installed)
+
+```bash
+# Full build (first time)
+code-review-graph build
+
+# Incremental update
+code-review-graph update
+
+# Check status
+code-review-graph status
+```
+
+The graph is stored as SQLite at `.code-review-graph/graph.db`.

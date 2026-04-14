@@ -1,46 +1,44 @@
 ---
 name: review-delta
-description: Review only changes since last commit using impact analysis. Token-efficient delta review with automatic blast-radius detection.
-argument-hint: "[file or function name]"
+description: Reviews only changes since last commit using blast-radius detection. Token-efficient delta review. Use for quick reviews of recent changes.
 ---
 
 # Review Delta
 
-Perform a focused, token-efficient code review of only the changed code and its blast radius.
+Focused review of only the most recent changes and their impact.
 
-**Token optimization:** Before starting, call `get_docs_section_tool(section_name="review-delta")` for the optimized workflow. Use ONLY changed nodes + 2-hop neighbors in context.
+## When to use this skill
 
-## Steps
+- Quick review of changes since last commit
+- Want a lighter review than full PR review
+- Checking if recent edits broke anything
 
-1. **Ensure the graph is current** by calling `build_or_update_graph_tool()` (incremental update).
+## How to use it
 
-2. **Get review context** by calling `get_review_context_tool()`. This returns:
-   - Changed files (auto-detected from git diff)
-   - Impacted nodes and files (blast radius)
-   - Source code snippets for changed areas
-   - Review guidance (test coverage gaps, wide impact warnings, inheritance concerns)
+1. **Get changed files**:
+   ```bash
+   git diff --name-only HEAD~1..HEAD
+   ```
 
-3. **Analyze the blast radius** by reviewing the `impacted_nodes` and `impacted_files` in the context. Focus on:
-   - Functions whose callers changed (may need signature/behavior verification)
-   - Classes with inheritance changes (Liskov substitution concerns)
-   - Files with many dependents (high-risk changes)
+2. **Run blast-radius analysis**:
+   ```bash
+   bash skills/code-graph/scripts/blast-radius.sh
+   # No args = auto-detects from git diff
+   ```
 
-4. **Perform the review** using the context. For each changed file:
-   - Review the source snippet for correctness, style, and potential bugs
-   - Check if impacted callers/dependents need updates
-   - Verify test coverage using `query_graph_tool(pattern="tests_for", target=<function_name>)`
-   - Flag any untested changed functions
+3. **Focus review** on the blast radius output:
+   - Review changed code for correctness and style
+   - Check if callers/dependents need updates
+   - Flag untested changed functions
 
-5. **Report findings** in a structured format:
-   - **Summary**: One-line overview of the changes
-   - **Risk level**: Low / Medium / High (based on blast radius)
-   - **Issues found**: Bugs, style issues, missing tests
-   - **Blast radius**: List of impacted files/functions
-   - **Recommendations**: Actionable suggestions
+4. **Report findings**:
+   - **Summary**: One-line overview
+   - **Risk level**: Based on blast radius size
+   - **Issues**: Bugs, style, missing tests
+   - **Blast radius**: Impacted files/functions
 
-## Advantages Over Full-Repo Review
+## Advantages over full review
 
-- Only sends changed + impacted code to the model (5-10x fewer tokens)
-- Automatically identifies blast radius without manual file searching
-- Provides structural context (who calls what, inheritance chains)
-- Flags untested functions automatically
+- Only examines changed + impacted code (fewer tokens)
+- Automatically identifies blast radius
+- Fast iteration cycle for active development
