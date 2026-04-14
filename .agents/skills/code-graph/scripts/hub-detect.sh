@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -eo pipefail
 
 # hub-detect.sh — find most-connected files (hubs) and bridge nodes
 # Usage: scripts/hub-detect.sh [--json] [directory]
@@ -81,7 +81,7 @@ for file in "${SOURCE_FILES[@]}"; do
 
   for other in "${SOURCE_FILES[@]}"; do
     [[ "$file" == "$other" ]] && continue
-    if grep -qE "(import|require|from|use|include|load)[^'\"\`]*['\"\`][^'\"\`]*\b${base_no_ext}\b" "$other" 2>/dev/null; then
+    if grep -qE "(import|require|from)\s+.*\b${base_no_ext}\b|['\"\`].*\b${base_no_ext}\b" "$other" 2>/dev/null; then
       (( count++ )) || true
       other_dir="$(dirname "$other")"
       seen_dirs["$other_dir"]=1
@@ -135,13 +135,15 @@ if [[ "$JSON_MODE" == true ]]; then
   layer=0
   first=true
   while IFS=' ' read -r cnt fpath; do
+    [[ -z "$fpath" ]] && continue
     rel="${fpath#$TARGET_DIR/}"
     base="$(basename "$fpath")"
     id="${base%.*}"
 
     # Determine shape
     shape="rect"
-    if [[ -n "${BRIDGE_MAP[$fpath]+x}" ]]; then
+    bridge_check="${BRIDGE_MAP["$fpath"]:-}"
+    if [[ -n "$bridge_check" ]]; then
       shape="hexagon"
     fi
     if [[ "$cnt" -ge 20 ]]; then
@@ -160,9 +162,10 @@ if [[ "$JSON_MODE" == true ]]; then
   echo '  "edges": ['
   first=true
   while IFS=' ' read -r cnt fpath; do
+    [[ -z "$fpath" ]] && continue
     base="$(basename "$fpath")"
     hub_id="${base%.*}"
-    importer_list="${IMPORTERS[$fpath]:-}"
+    importer_list="${IMPORTERS["$fpath"]:-}"
 
     IFS=',' read -ra imps <<< "$importer_list"
     for imp in "${imps[@]}"; do
@@ -193,7 +196,8 @@ if [[ "$JSON_MODE" == true ]]; then
 
   # Summary
   hub_count=0
-  bridge_count="${#BRIDGE_MAP[@]}"
+  bridge_count=0
+  for _k in "${!BRIDGE_MAP[@]}"; do (( bridge_count++ )) || true; done
   while IFS=' ' read -r cnt fpath; do
     (( hub_count++ )) || true
   done < <(printf '%s\n' "${sorted_hubs[@]}" | sort -rn | head -10)

@@ -14,11 +14,17 @@ from __future__ import annotations
 
 import copy
 import json
+import io
 import math
 import os
 import re
 import sys
 from dataclasses import dataclass
+
+# Ensure UTF-8 output on Windows
+if sys.stdout.encoding != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 from xml.sax.saxutils import escape
 
@@ -26,7 +32,7 @@ Point = Tuple[float, float]
 Bounds = Tuple[float, float, float, float]
 
 SCRIPT_DIR = os.path.dirname(__file__)
-TEMPLATE_DIR = os.path.join(SCRIPT_DIR, "..", "templates")
+TEMPLATE_DIR = os.path.join(SCRIPT_DIR, "..", "resources", "templates")
 DEFAULT_VIEWBOX = {
     "architecture": (960, 600),
     "data-flow": (960, 600),

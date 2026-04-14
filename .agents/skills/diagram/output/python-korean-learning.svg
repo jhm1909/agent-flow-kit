@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 880" width="1100" height="880">
+  <defs>
+    <marker id="arrowA" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrowB" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#10b981"/>
+    </marker>
+    <marker id="arrowC" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#2563eb"/>
+    </marker>
+    <marker id="arrowE" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+    <marker id="arrowF" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7c3aed"/>
+    </marker>
+    <marker id="arrowG" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444"/>
+    </marker>
+    <marker id="arrowH" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/>
+    </marker>
+    <filter id="shadowSoft" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#0f172a" flood-opacity="0.12"/>
+    </filter>
+    <filter id="shadowGlass" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#020617" flood-opacity="0.28"/>
+    </filter>
+    <style>
+    text { font-family: 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+    .title { font-size: 30px; font-weight: 700; fill: #111827; }
+    .subtitle { font-size: 14px; font-weight: 500; fill: #6b7280; }
+    .section { font-size: 13px; font-weight: 700; fill: #2563eb; letter-spacing: 1.4px; }
+    .section-sub { font-size: 12px; font-weight: 500; fill: #94a3b8; }
+    .node-title { font-size: 18px; font-weight: 700; fill: #111827; }
+    .node-sub { font-size: 12px; font-weight: 500; fill: #6b7280; }
+    .node-type { font-size: 12px; font-weight: 700; fill: #9ca3af; letter-spacing: 0.08em; }
+    .arrow-label { font-size: 12px; font-weight: 600; fill: #6b7280; }
+    .legend { font-size: 12px; font-weight: 500; fill: #6b7280; }
+    .footnote { font-size: 12px; font-weight: 500; fill: #94a3b8; }
+    </style>
+  </defs>
+  <rect width="1100.0" height="880.0" fill="#ffffff"/>
+  <text x="550.0" y="56" text-anchor="middle" class="title">파이썬 학습 로드맵 (Python Learning Roadmap)</text>
+  <text x="550.0" y="82" text-anchor="middle" class="subtitle">한국어로 배우는 파이썬 프로그래밍 — Quy trình học Python tiếng Hàn</text>
+  <rect x="30.0" y="80.0" width="1040.0" height="130.0" rx="16.0" fill="#f0f9ff" stroke="#dbeafe" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="48.0" y="104.0" class="section">1단계: 기초 준비 (GIAI ĐOẠN 1: CHUẨN BỊ)</text>
+  <rect x="30.0" y="230.0" width="1040.0" height="130.0" rx="16.0" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="48.0" y="254.0" class="section">2단계: 기본 문법 (GIAI ĐOẠN 2: CÚ PHÁP CƠ BẢN)</text>
+  <rect x="30.0" y="380.0" width="1040.0" height="130.0" rx="16.0" fill="#fdf4ff" stroke="#e9d5ff" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="48.0" y="404.0" class="section">3단계: 중급 개념 (GIAI ĐOẠN 3: KHÁI NIỆM TRUNG CẤP)</text>
+  <rect x="30.0" y="530.0" width="1040.0" height="130.0" rx="16.0" fill="#fff7ed" stroke="#fed7aa" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="48.0" y="554.0" class="section">4단계: 실전 프로젝트 (GIAI ĐOẠN 4: DỰ ÁN THỰC TẾ)</text>
+  <rect x="30.0" y="680.0" width="1040.0" height="130.0" rx="16.0" fill="#fef2f2" stroke="#fecaca" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <text x="48.0" y="704.0" class="section">5단계: 심화 &amp; 취업 준비 (GIAI ĐOẠN 5: CHUẨN BỊ XIN VIỆC)</text>
+  <path d="M 210.0,148.0 L 260.0,148.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 420.0,148.0 L 470.0,148.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 630.0,148.0 L 680.0,148.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 130.0,176.0 L 130.0,196.4 L 125.0,196.4 L 125.0,270.0" fill="none" stroke="#f97316" stroke-width="2.4" marker-end="url(#arrowE)"/>
+  <path d="M 200.0,298.0 L 250.0,298.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 400.0,298.0 L 450.0,298.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 600.0,298.0 L 650.0,298.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 125.0,326.0 L 125.0,346.4 L 130.0,346.4 L 130.0,420.0" fill="none" stroke="#f97316" stroke-width="2.4" marker-end="url(#arrowE)"/>
+  <path d="M 210.0,448.0 L 260.0,448.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 420.0,448.0 L 470.0,448.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 620.0,448.0 L 680.0,448.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 130.0,476.0 L 130.0,570.0" fill="none" stroke="#f97316" stroke-width="2.4" marker-end="url(#arrowE)"/>
+  <path d="M 210.0,598.0 L 260.0,598.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 420.0,598.0 L 470.0,598.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 630.0,598.0 L 680.0,598.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 130.0,626.0 L 130.0,720.0" fill="none" stroke="#f97316" stroke-width="2.4" marker-end="url(#arrowE)"/>
+  <path d="M 210.0,748.0 L 260.0,748.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 420.0,748.0 L 470.0,748.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 650.0,748.0 L 700.0,748.0" fill="none" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <path d="M 785.0,720.0 L 785.0,699.6 L 230.4,699.6 L 230.4,448.0 L 210.0,448.0" fill="none" stroke="#ef4444" stroke-width="2.4" marker-end="url(#arrowG)" stroke-dasharray="6,4"/>
+  <rect x="50.0" y="120.0" width="160.0" height="56.0" rx="10.0" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="130.0" y="138.0" text-anchor="middle" class="node-type">Python 설치</text>
+  <text x="130.0" y="154.0" text-anchor="middle" class="node-title">환경 설정</text>
+  <text x="130.0" y="176.0" text-anchor="middle" class="node-sub">IDLE / VS Code</text>
+  <rect x="260.0" y="120.0" width="160.0" height="56.0" rx="10.0" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="340.0" y="138.0" text-anchor="middle" class="node-type">IT 용어</text>
+  <text x="340.0" y="154.0" text-anchor="middle" class="node-title">한국어 용어 학습</text>
+  <text x="340.0" y="176.0" text-anchor="middle" class="node-sub">변수, 함수, 반복문</text>
+  <rect x="470.0" y="120.0" width="160.0" height="56.0" rx="10.0" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="550.0" y="138.0" text-anchor="middle" class="node-type">학습 자료</text>
+  <text x="550.0" y="154.0" text-anchor="middle" class="node-title">한글 교재 선택</text>
+  <text x="550.0" y="176.0" text-anchor="middle" class="node-sub">점프 투 파이썬</text>
+  <rect x="680.0" y="120.0" width="160.0" height="56.0" rx="10.0" fill="#eff6ff" stroke="#2563eb" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="760.0" y="138.0" text-anchor="middle" class="node-type">네트워킹</text>
+  <text x="760.0" y="154.0" text-anchor="middle" class="node-title">커뮤니티 가입</text>
+  <text x="760.0" y="176.0" text-anchor="middle" class="node-sub">파이썬 코리아</text>
+  <rect x="50.0" y="270.0" width="150.0" height="56.0" rx="10.0" fill="#ecfdf5" stroke="#10b981" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="125.0" y="288.0" text-anchor="middle" class="node-type">기본</text>
+  <text x="125.0" y="304.0" text-anchor="middle" class="node-title">변수 &amp; 자료형</text>
+  <text x="125.0" y="326.0" text-anchor="middle" class="node-sub">int, str, list</text>
+  <rect x="250.0" y="260.0" width="150.0" height="76.0" rx="10.0" fill="#ecfdf5" stroke="#10b981" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <text x="325.0" y="298.0" text-anchor="middle" class="node-title">조건문 &amp; 반복문</text>
+  <rect x="450.0" y="270.0" width="150.0" height="56.0" rx="10.0" fill="#ecfdf5" stroke="#10b981" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="525.0" y="288.0" text-anchor="middle" class="node-type">def</text>
+  <text x="525.0" y="304.0" text-anchor="middle" class="node-title">함수 정의</text>
+  <text x="525.0" y="326.0" text-anchor="middle" class="node-sub">매개변수, 반환값</text>
+  <rect x="650.0" y="270.0" width="160.0" height="56.0" rx="10.0" fill="#ecfdf5" stroke="#10b981" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="730.0" y="288.0" text-anchor="middle" class="node-type">I/O</text>
+  <text x="730.0" y="304.0" text-anchor="middle" class="node-title">입출력 &amp; 파일</text>
+  <text x="730.0" y="326.0" text-anchor="middle" class="node-sub">open(), read()</text>
+  <rect x="50.0" y="420.0" width="160.0" height="56.0" rx="10.0" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <rect x="56.0" y="426.0" width="148.0" height="44.0" rx="7.0" fill="none" stroke="#8b5cf6" stroke-width="1.2" opacity="0.65"/>
+  <text x="130.0" y="438.0" text-anchor="middle" class="node-type">클래스</text>
+  <text x="130.0" y="454.0" text-anchor="middle" class="node-title">객체지향 (OOP)</text>
+  <text x="130.0" y="476.0" text-anchor="middle" class="node-sub">class, 상속</text>
+  <rect x="260.0" y="420.0" width="160.0" height="56.0" rx="10.0" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="340.0" y="438.0" text-anchor="middle" class="node-type">라이브러리</text>
+  <text x="340.0" y="454.0" text-anchor="middle" class="node-title">모듈 &amp; 패키지</text>
+  <text x="340.0" y="476.0" text-anchor="middle" class="node-sub">pip install</text>
+  <rect x="470.0" y="410.0" width="150.0" height="76.0" rx="10.0" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <text x="545.0" y="448.0" text-anchor="middle" class="node-title">예외 처리</text>
+  <rect x="680.0" y="420.0" width="160.0" height="56.0" rx="10.0" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="760.0" y="438.0" text-anchor="middle" class="node-type">자료구조</text>
+  <text x="760.0" y="454.0" text-anchor="middle" class="node-title">데이터 구조</text>
+  <text x="760.0" y="476.0" text-anchor="middle" class="node-sub">dict, set, tuple</text>
+  <rect x="50.0" y="570.0" width="160.0" height="56.0" rx="10.0" fill="#fff7ed" stroke="#f97316" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="130.0" y="588.0" text-anchor="middle" class="node-type">프로젝트 A</text>
+  <text x="130.0" y="604.0" text-anchor="middle" class="node-title">웹 크롤링</text>
+  <text x="130.0" y="626.0" text-anchor="middle" class="node-sub">BeautifulSoup</text>
+  <rect x="260.0" y="570.0" width="160.0" height="56.0" rx="10.0" fill="#fff7ed" stroke="#f97316" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="340.0" y="588.0" text-anchor="middle" class="node-type">프로젝트 B</text>
+  <text x="340.0" y="604.0" text-anchor="middle" class="node-title">업무 자동화</text>
+  <text x="340.0" y="626.0" text-anchor="middle" class="node-sub">엑셀, 이메일</text>
+  <rect x="470.0" y="570.0" width="160.0" height="56.0" rx="10.0" fill="#fff7ed" stroke="#f97316" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="550.0" y="588.0" text-anchor="middle" class="node-type">프로젝트 C</text>
+  <text x="550.0" y="604.0" text-anchor="middle" class="node-title">API 활용</text>
+  <text x="550.0" y="626.0" text-anchor="middle" class="node-sub">Flask / FastAPI</text>
+  <rect x="680.0" y="570.0" width="170.0" height="56.0" rx="10.0" fill="#fff7ed" stroke="#f97316" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="765.0" y="588.0" text-anchor="middle" class="node-type">GitHub</text>
+  <text x="765.0" y="604.0" text-anchor="middle" class="node-title">포트폴리오 구축</text>
+  <text x="765.0" y="626.0" text-anchor="middle" class="node-sub">README 작성</text>
+  <rect x="50.0" y="720.0" width="160.0" height="56.0" rx="10.0" fill="#fef2f2" stroke="#ef4444" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="130.0" y="738.0" text-anchor="middle" class="node-type">코딩 테스트</text>
+  <text x="130.0" y="754.0" text-anchor="middle" class="node-title">알고리즘 풀기</text>
+  <text x="130.0" y="776.0" text-anchor="middle" class="node-sub">백준 / 프로그래머스</text>
+  <rect x="260.0" y="720.0" width="160.0" height="56.0" rx="10.0" fill="#fef2f2" stroke="#ef4444" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="340.0" y="738.0" text-anchor="middle" class="node-type">CERTIFICATE</text>
+  <text x="340.0" y="754.0" text-anchor="middle" class="node-title">자격증 취득</text>
+  <text x="340.0" y="776.0" text-anchor="middle" class="node-sub">정보처리기사</text>
+  <rect x="470.0" y="720.0" width="180.0" height="56.0" rx="10.0" fill="#fef2f2" stroke="#ef4444" stroke-width="2.0" filter="url(#shadowSoft)"/>
+  <rect x="476.0" y="726.0" width="168.0" height="44.0" rx="7.0" fill="none" stroke="#ef4444" stroke-width="1.2" opacity="0.65"/>
+  <text x="560.0" y="738.0" text-anchor="middle" class="node-type">목표 달성</text>
+  <text x="560.0" y="754.0" text-anchor="middle" class="node-title">취업 / 프리랜서</text>
+  <text x="560.0" y="776.0" text-anchor="middle" class="node-sub">이력서 &amp; 면접</text>
+  <rect x="700.0" y="720.0" width="170.0" height="56.0" rx="10.0" fill="#fef2f2" stroke="#ef4444" stroke-width="1.8" filter="url(#shadowSoft)"/>
+  <text x="785.0" y="738.0" text-anchor="middle" class="node-type">ADVANCED</text>
+  <text x="785.0" y="754.0" text-anchor="middle" class="node-title">심화 학습</text>
+  <text x="785.0" y="776.0" text-anchor="middle" class="node-sub">AI / 데이터 분석</text>
+  <rect x="107.0" y="219.2" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="125.0" y="233.2" text-anchor="middle" class="arrow-label">시작</text>
+  <rect x="112.0" y="369.2" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="130.0" y="383.2" text-anchor="middle" class="arrow-label">심화</text>
+  <rect x="112.0" y="509.0" width="36" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="130.0" y="523.0" text-anchor="middle" class="arrow-label">실전</text>
+  <rect x="109.0" y="659.0" width="42" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="130.0" y="673.0" text-anchor="middle" class="arrow-label">취업준비</text>
+  <rect x="483.2" y="657.6" width="49" height="20" rx="6" fill="#ffffff" opacity="0.94"/>
+  <text x="507.7" y="671.6" text-anchor="middle" class="arrow-label">지속 학습</text>
+  <line x1="950.0" y1="840.0" x2="980.0" y2="840.0" stroke="#7c3aed" stroke-width="2.4" marker-end="url(#arrowA)"/>
+  <text x="990.0" y="844.0" class="legend">학습 순서</text>
+  <line x1="950.0" y1="862.0" x2="980.0" y2="862.0" stroke="#f97316" stroke-width="2.4" marker-end="url(#arrowE)"/>
+  <text x="990.0" y="866.0" class="legend">단계 전환</text>
+  <line x1="950.0" y1="884.0" x2="980.0" y2="884.0" stroke="#ef4444" stroke-width="2.4" marker-end="url(#arrowG)"/>
+  <text x="990.0" y="888.0" class="legend">지속 학습 루프</text>
+  <text x="42.0" y="864.0" class="footnote">© 2026 파이썬 한국어 학습 가이드 — Python Korean Learning Roadmap</text>
+</svg>

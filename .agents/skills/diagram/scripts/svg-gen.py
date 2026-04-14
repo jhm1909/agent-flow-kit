@@ -10,10 +10,16 @@ Usage:
 
 import argparse
 import json
+import io
 import math
 import sys
 import xml.etree.ElementTree as ET
 from typing import Any
+
+# Ensure UTF-8 output on Windows
+if sys.stdout.encoding != "utf-8":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
 
 # ---------------------------------------------------------------------------
 # Style definitions
