@@ -1,34 +1,70 @@
-# Visualize Codebase
+---
+description: Auto-generates architecture diagram from codebase analysis. Combines code-graph and diagram skills.
+---
 
-Auto-generate an architecture diagram from codebase analysis. Combines code-graph analysis with diagram generation.
+# Visualize Codebase Workflow
 
-## Steps
+---
 
-1. Run hub detection to understand the codebase structure:
+## Step 1: Analyze Structure
+
+// turbo
+
+1. **Invoke `[code-graph]` skill** — run hub detection:
    ```bash
-   bash skills/code-graph/scripts/hub-detect.sh
+   bash scripts/hub-detect.sh
    ```
-   If no source files are found, inform the user and stop.
+2. Capture: top hubs, bridge nodes, directory structure.
+3. If no source files found → inform user and stop.
 
-2. From the output, identify:
-   - Top hub files (most imported)
-   - Bridge files (cross-directory connectors)
-   - Directory groupings (natural layers)
+---
 
-3. Convert the analysis into a diagram JSON:
-   - Each hub/bridge becomes a node (shape based on role)
-   - Import relationships become edges
-   - Group by directory into layers
-   - Title: "Architecture: <project name>"
+## Step 2: Build Graph Data
 
-4. Generate the architecture diagram:
+// turbo
+
+1. **Invoke `[code-graph]` skill** to interpret the hub-detect output:
+   - Identify top hub files (most imported)
+   - Identify bridge files (cross-directory connectors)
+   - Group files by directory into natural layers
+2. **Invoke `[diagram]` skill** — read `references/tech-diagram.md` to map:
+   - Each hub/bridge → a node (shape based on role: `cylinder` for data, `hexagon` for orchestrators, `rect` for modules)
+   - Import relationships → edges (`primary` for direct, `async` for cross-directory)
+3. Build JSON with title: "Architecture: <project name>"
+
+---
+
+## Step 3: Generate Diagram
+
+// turbo
+
+1. **Invoke `[diagram]` skill** — generate architecture diagram:
    ```bash
-   echo '<json>' | python3 skills/diagram/scripts/svg-gen.py -o architecture.svg --style blueprint
+   echo '<json>' | python3 scripts/svg-gen.py -o architecture.svg --style blueprint
    ```
-
-5. Validate and deliver:
+   Default style: `blueprint` (best for architecture diagrams per `style-diagram-matrix.md`).
+2. Validate:
    ```bash
-   bash skills/diagram/scripts/validate-svg.sh architecture.svg
+   bash scripts/validate-svg.sh architecture.svg
    ```
 
-6. Summarize: "Found N hubs, M bridges across K directories." Ask if the user wants to explore any module deeper.
+---
+
+## Step 4: Deliver
+
+// turbo
+
+1. Present architecture diagram file path.
+2. Summarize: "Found N hubs, M bridges across K directories."
+3. **WAIT** — ask user: "Want to dive deeper into any module?"
+
+---
+
+## Quick Reference
+
+| Step | Skill                | Output                    |
+|------|----------------------|---------------------------|
+| 1    | code-graph           | Hubs + bridges + dirs     |
+| 2    | code-graph + diagram | JSON graph data           |
+| 3    | diagram              | Architecture SVG          |
+| 4    | —                    | Summary + next steps      |

@@ -1,28 +1,86 @@
-# Review Code Changes
+---
+description: Orchestrates code review using blast-radius analysis, risk scoring, and structured reporting.
+---
 
-Analyze recent code changes using blast-radius tracing and risk scoring.
+# Code Review Workflow
 
-## Steps
+---
 
-1. Identify the changed files:
+## Step 1: Identify Changes
+
+// turbo
+
+1. **Invoke `[code-graph]` skill** to identify changed files:
    ```bash
    git diff --name-only HEAD~1..HEAD
    ```
-   If no changes found, inform the user and stop.
+   Or user-specified range / PR branch.
+2. If no changes found → inform user and stop.
+3. List changed files for context.
 
-2. Run blast-radius analysis:
+---
+
+## Step 2: Blast-Radius Analysis
+
+// turbo
+
+1. **Invoke `[code-graph]` skill** — run blast-radius:
    ```bash
-   bash skills/code-graph/scripts/blast-radius.sh
+   bash scripts/blast-radius.sh <changed-files>
    ```
+2. Capture output: direct callers, transitive dependents, affected tests, risk level.
+3. If blast-radius > 50 files → warn user: "Large scope, review may be incomplete."
+4. **WAIT** for user to confirm review scope.
 
-3. Read the risk assessment from the output. Follow the review strategy based on risk level:
-   - **CRITICAL/HIGH**: Read all files in the blast radius.
-   - **MEDIUM**: Read changed files and direct callers.
-   - **LOW**: Read changed files only.
+---
 
-4. For each file reviewed, check for:
-   - Security-sensitive code changes (auth, validation, access control)
+## Step 3: Focused Review
+
+// turbo
+
+1. **Invoke `[review-delta]` skill** for risk-based review strategy:
+   - **CRITICAL/HIGH** → read ALL files in blast radius
+   - **MEDIUM** → read changed files + direct callers
+   - **LOW** → read changed files only
+2. For each file, check:
+   - Security-sensitive changes (auth, validation, access control)
    - Breaking changes to public APIs
    - Missing test coverage for changed functions
+3. **Invoke `[review-pr]` skill** if reviewing a full PR (multiple commits).
 
-5. Present findings with file:line references. Classify each issue as CRITICAL, HIGH, MEDIUM, or LOW. Suggest specific fixes where applicable.
+---
+
+## Step 4: Report
+
+// turbo
+
+1. Present findings using the `[review-pr]` output template:
+   ```
+   ## Code Review
+
+   ### Summary
+   <1-3 sentence overview>
+
+   ### Risk Assessment
+   - Overall risk: Low / Medium / High
+   - Blast radius: X files impacted
+   - Test coverage gaps: <list>
+
+   ### Issues Found
+   - <file:line> — <description> [CRITICAL/HIGH/MEDIUM/LOW]
+
+   ### Recommendations
+   1. <actionable suggestion>
+   ```
+2. **WAIT** for user to acknowledge findings.
+
+---
+
+## Quick Reference
+
+| Step | Skill                      | Output                  |
+|------|----------------------------|-------------------------|
+| 1    | code-graph                 | Changed file list       |
+| 2    | code-graph                 | Blast-radius + risk     |
+| 3    | review-delta / review-pr   | File-by-file review     |
+| 4    | review-pr                  | Structured report       |
