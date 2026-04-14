@@ -1456,6 +1456,24 @@ def build_svg(template_type: str, data: Dict[str, object]) -> str:
     arrows_data = data.get("arrows", [])
     legend = data.get("legend", [])
 
+    # Auto-layout nodes that don't have x,y positions
+    has_positions = all("x" in n and "y" in n for n in nodes_data) if nodes_data else True
+    if not has_positions:
+        try:
+            from layout.engine import compute_layout as _auto_layout
+            auto_data = {"nodes": nodes_data, "edges": arrows_data, "containers": containers}
+            auto_result = _auto_layout(auto_data)
+            nodes_data = auto_result.get("nodes", nodes_data)
+            if auto_result.get("containers"):
+                containers = auto_result["containers"]
+            # Update canvas size if auto-computed
+            if auto_result.get("_canvas_width"):
+                width = max(width, auto_result["_canvas_width"])
+            if auto_result.get("_canvas_height"):
+                height = max(height, auto_result["_canvas_height"])
+        except ImportError:
+            pass  # layout engine not available, proceed with raw positions
+
     normalized_nodes = [normalize_node(node, f"node-{idx}") for idx, node in enumerate(nodes_data)]
     node_map = {node.node_id: node for node in normalized_nodes}
 
