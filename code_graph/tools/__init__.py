@@ -1,4 +1,4 @@
-"""MCP tool definitions for the Code Review Graph server.
+"""MCP tool definitions for the Code Graph server.
 
 Exposes 27 tools:
 1. build_or_update_graph  - full or incremental build

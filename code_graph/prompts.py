@@ -1,4 +1,4 @@
-"""MCP prompt templates for Code Review Graph.
+"""MCP prompt templates for Code Graph.
 
 Provides 5 pre-built prompt workflows, all enforcing token-efficient
 detail_level="minimal" first patterns with get_minimal_context entry point.
