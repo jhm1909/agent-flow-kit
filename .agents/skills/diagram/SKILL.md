@@ -231,10 +231,22 @@ bash scripts/validate-svg.sh .agents-output/diagram/svg/output.svg
 | `scripts/generate-diagram.sh` | End-to-end: generate + validate + export | `bash scripts/generate-diagram.sh --help` |
 | `scripts/test-all-styles.sh` | Regression test all 7 styles | `bash scripts/test-all-styles.sh` |
 
+## Unsupported Requests
+
+If user asks for something not supported, respond honestly:
+
+| Request | Response |
+|---------|----------|
+| Gantt chart | "Timeline diagram is the closest. Want me to use that?" |
+| Pie chart / bar chart | "This toolkit generates structural diagrams, not data charts. Use matplotlib/d3.js instead." |
+| Interactive diagram | "SVG is static. For interactive, consider D3.js or Mermaid.js." |
+| Photo-realistic | "This generates vector diagrams with flat/clean styles, not photorealistic images." |
+
 ## Resources & References
 
 | Resource | Load when |
 |----------|-----------|
+| [json-schema.md](references/json-schema.md) | **FIRST**: complete field reference, required/optional, common mistakes |
 | `resources/*.json` | Need JSON format examples (7 fixtures, one per style) |
 | `resources/templates/*.svg` | Need SVG template skeletons (10 diagram types) |
 | [tech-diagram.md](references/tech-diagram.md) | Need full shape vocabulary, arrow semantics, AI domain patterns |

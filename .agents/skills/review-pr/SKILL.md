@@ -14,10 +14,19 @@ Full structural code review of a pull request or branch diff.
 
 ## When to use this skill
 
-- Reviewing a complete PR (multiple commits)
-- Checking if a branch is safe to merge
+```
+User request → Which review skill?
+├─ "review this PR" / "is this ready to merge?" → review-pr (this skill)
+├─ "review this branch" + multiple commits → review-pr
+├─ "check my changes" + last commit only → review-delta
+├─ "did I break anything?" → review-delta
+├─ code-review workflow escalated to HIGH → review-pr (called by workflow)
+└─ code-review workflow at LOW/MEDIUM → review-delta (called by workflow)
+```
+
+- Reviewing a complete PR (multiple commits against base branch)
+- Checking if a branch is safe to merge (go/no-go decision)
 - Need blast-radius across ALL commits (not just last one)
-- User says "review this PR" or "is this ready to merge?"
 
 **For quick single-commit reviews** → use `[review-delta]` instead.
 

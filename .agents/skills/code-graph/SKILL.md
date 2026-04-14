@@ -112,4 +112,5 @@ pip install code-review-graph
 | File | Load when |
 |------|-----------|
 | [blast-radius.md](references/blast-radius.md) | Need risk scoring methodology details, tracing algorithm |
+| [security-checklist.md](references/security-checklist.md) | During code review — red flags, language-specific checks |
 | [architecture.md](references/architecture.md) | Understanding the full graph engine design (Python package) |

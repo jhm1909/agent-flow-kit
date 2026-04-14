@@ -65,8 +65,8 @@ description: Orchestrates code review using blast-radius analysis, risk-based es
 ### MEDIUM risk
 1. **Invoke `[review-delta]` skill** — standard review.
 2. Read changed files + all files listed under `callers`.
-3. Check for:
-   - Security-sensitive changes (auth, validation, access control removed?)
+3. **Invoke `[code-graph]` skill** — read [security-checklist.md](skills/code-graph/references/security-checklist.md) and check for:
+   - Security red flags (removed validation, hardcoded secrets, SQL concatenation)
    - Public API changes (breaking changes for consumers?)
    - Missing test coverage (any `callers` without corresponding tests?)
 4. If test coverage gaps found → flag them explicitly.
@@ -74,7 +74,8 @@ description: Orchestrates code review using blast-radius analysis, risk-based es
 ### HIGH / CRITICAL risk
 1. **Invoke `[review-pr]` skill** — full PR review.
 2. Read ALL files in `review_order` (changed → callers → tests → transitive).
-3. For each high-risk file:
+3. **Invoke `[code-graph]` skill** — read [security-checklist.md](skills/code-graph/references/security-checklist.md). For each high-risk file:
+   - Run full security checklist (red flags + language-specific checks)
    - Check who calls it (from blast-radius callers list)
    - Check if tests cover the changed behavior
    - Look for removed validation, broken contracts, missing error handling

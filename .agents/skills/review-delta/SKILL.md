@@ -14,6 +14,16 @@ Focused, token-efficient review of the most recent changes and their impact.
 
 ## When to use this skill
 
+```
+User request → Which review skill?
+├─ "check my changes" / "did I break anything?" → review-delta (this skill)
+├─ "quick review" / single commit → review-delta
+├─ Risk is LOW/MEDIUM (from code-review workflow) → review-delta
+├─ Risk is HIGH → escalate to review-pr or /code-review workflow
+├─ "review this PR" / merge readiness → review-pr
+└─ Multiple commits against base branch → review-pr
+```
+
 - Quick review during active development (after each commit)
 - Checking if recent edits introduced bugs
 - Want a lighter review than full PR review
