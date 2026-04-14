@@ -1,6 +1,6 @@
 # Style 2: Dark Terminal
 
-Neon-on-dark hacker aesthetic. Matches CLAUDE.md standard tech diagram style.
+Neon-on-dark hacker aesthetic. Matches standard tech diagram style.
 
 ## Colors
 

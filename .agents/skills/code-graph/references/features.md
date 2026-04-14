@@ -68,8 +68,8 @@
 - **Removed symlink workaround**: The `_safe_path` helper for spaces-in-paths is no longer needed with `uvx`
 
 ## v1.6.3
-- **SessionStart hook**: Claude Code automatically prefers graph MCP tools over full codebase scans at session start
-- **Marketplace ready**: plugin.json corrected for official Claude Code plugin marketplace submission
+- **Session hook**: AI coding assistants automatically prefer graph tools over full codebase scans at session start
+- **Plugin ready**: plugin.json corrected for plugin distribution
 - **README cleanup**: Removed screenshot placeholders
 
 ## v1.6.2
@@ -91,7 +91,7 @@
 - **Project cleanup**: Removed redundant `references/`, `agents/`, `settings.json`
 
 ## v1.4.0
-- **`init` command**: Automatic `.mcp.json` setup for Claude Code integration
+- **`init` command**: Automatic `.mcp.json` setup for AI coding assistant integration
 - **Interactive D3.js graph visualization**: `code-graph visualize` generates an HTML graph you can explore in-browser
 - **Documentation overhaul**: Comprehensive docs audit across all reference files
 
@@ -121,7 +121,7 @@
 - **6 MCP tools** for full graph interaction
 - **3 review-first skills**: build-graph, review-delta, review-pr
 - **PostToolUse hooks** (Write|Edit|Bash) for automatic background updates
-- **FastMCP 3.0 compatible** stdio MCP server
+- **FastMCP 3.0 compatible** stdio tool server
 
 ## Privacy & Data
 - All data stays 100% local

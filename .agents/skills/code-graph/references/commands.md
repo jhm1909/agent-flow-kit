@@ -1,6 +1,6 @@
 # All Available Commands
 
-## Skills (Claude Code slash commands)
+## Skills (slash commands)
 
 ### `/code-graph:build-graph`
 Build or update the knowledge graph.
@@ -19,7 +19,7 @@ Review a PR or branch diff.
 - Full impact analysis across all PR commits
 - Structured output with risk assessment
 
-## MCP Tools (22 total)
+## Tools (22 total, available when using `pip install code-review-graph` with a compatible platform)
 
 ### Core Tools
 
@@ -194,7 +194,7 @@ kind: str | None
 limit: int = 20
 ```
 
-## MCP Prompts (5 workflow templates)
+## Workflow Prompts (5 templates)
 
 ### `review_changes`
 Pre-commit review workflow using detect_changes, affected_flows, and test gaps.
@@ -224,7 +224,7 @@ base: str = "HEAD~1"
 
 ```bash
 # Setup
-code-graph install           # Register MCP server with Claude Code (alias: init)
+code-graph install           # Register tool server with your AI coding assistant (alias: init)
 code-graph install --dry-run # Preview without writing files
 
 # Build and update
@@ -254,5 +254,5 @@ code-graph repos                            # List registered repositories
 code-graph eval                         # Run evaluation benchmarks
 
 # Server
-code-graph serve                        # Start MCP server (stdio)
+code-graph serve                        # Start tool server (stdio)
 ```

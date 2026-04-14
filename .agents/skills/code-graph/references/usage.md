@@ -75,13 +75,13 @@ Embedding providers: Local (sentence-transformers), Google Gemini, MiniMax. Conf
 
 ### 7. Detect changes with risk scoring (v2)
 ```
-Ask Claude: "Review my recent changes with risk scoring"
+Ask your AI assistant: "Review my recent changes with risk scoring"
 ```
 Uses `detect_changes_tool` to map diffs to affected functions, flows, communities, and test gaps.
 
 ### 8. Explore architecture (v2)
 ```
-Ask Claude: "Show me the architecture of this project"
+Ask your AI assistant: "Show me the architecture of this project"
 ```
 Uses `get_architecture_overview_tool` for community-based architecture map with coupling warnings.
 

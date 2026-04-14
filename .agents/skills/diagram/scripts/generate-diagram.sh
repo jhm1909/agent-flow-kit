@@ -117,10 +117,10 @@ if [ -z "${STYLE_FILE:-}" ] || [ ! -f "$STYLE_FILE" ]; then
     exit 1
 fi
 
-# Note: Actual SVG generation is done by Claude Code
+# Note: Actual SVG generation is done by your AI coding assistant
 # This script provides validation and export only
 
-echo -e "${YELLOW}Note: SVG content generation requires Claude Code${NC}"
+echo -e "${YELLOW}Note: SVG content generation requires your AI coding assistant${NC}"
 echo -e "${YELLOW}This script provides validation and export only${NC}"
 
 # Validate if SVG exists
@@ -151,7 +151,7 @@ if [ -f "$SVG_FILE" ]; then
         exit 1
     fi
 else
-    echo -e "${YELLOW}SVG file not found. Generate it first with Claude Code.${NC}"
+    echo -e "${YELLOW}SVG file not found. Generate it first with your AI coding assistant.${NC}"
     exit 1
 fi
 

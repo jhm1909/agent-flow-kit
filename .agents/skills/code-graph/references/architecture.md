@@ -2,13 +2,13 @@
 
 ## System Overview
 
-`code-graph` is a Claude Code plugin that maintains a persistent, incrementally-updated knowledge graph of a codebase. It's designed to make code reviews faster and more context-aware by providing structural understanding of code relationships.
+`code-graph` is an AI coding assistant plugin that maintains a persistent, incrementally-updated knowledge graph of a codebase. It's designed to make code reviews faster and more context-aware by providing structural understanding of code relationships.
 
 ## Component Diagram
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                        Claude Code                           │
+│                     AI Coding Assistant                      │
 │                                                              │
 │  Skills (SKILL.md)          Hooks (hooks.json)               │
 │  ├── build-graph            └── PostToolUse (Write|Edit|Bash) │
@@ -17,9 +17,9 @@
 │          │                        │                          │
 │          ▼                        ▼                          │
 │  ┌────────────────────────────────────────────┐              │
-│  │            MCP Server (stdio)              │              │
+│  │            Tool Server (stdio)             │              │
 │  │                                            │              │
-│  │  22 MCP Tools + 5 MCP Prompts              │              │
+│  │  22 Tools + 5 Workflow Prompts             │              │
 │  │  ├── Core: build, impact, query, review,   │              │
 │  │  │   search, embed, stats, docs, large_fn  │              │
 │  │  ├── Flows: list, get, affected            │              │
