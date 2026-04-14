@@ -2,7 +2,13 @@
 # SVG Validation Script
 # Checks SVG syntax and reports detailed errors
 
-set -euo pipefail
+set -eo pipefail
+
+# Use python or python3 (Windows: python3 is often a Store stub that doesn't work)
+PYTHON="python"
+if ! "$PYTHON" -c "import sys" 2>/dev/null; then
+    PYTHON="python3"
+fi
 
 # Colors for output
 RED='\033[0;31m'
@@ -68,7 +74,7 @@ fi
 
 # Check 3: Unescaped entities in text
 echo -n "Checking text entities... "
-SPECIAL=$(python3 - "$SVG_FILE" <<'PY'
+SPECIAL=$($PYTHON - "$SVG_FILE" <<'PY'
 from pathlib import Path
 import re
 import sys
@@ -91,7 +97,7 @@ fi
 # Check 4: Marker references
 echo -n "Checking marker references... "
 MARKER_REFS=$( { grep -oE 'marker-end="url\(#[^)]+\)"' "$SVG_FILE" || true; } | { grep -oE '#[^)]+' || true; } | tr -d '#' | sort -u )
-MARKER_DEFS=$( { grep -oE '<marker id="[^"]+"' "$SVG_FILE" || true; } | { grep -oE 'id="[^"]+"' || true; } | tr -d 'id="' | sort -u )
+MARKER_DEFS=$( { grep -oE '<marker id="[^"]+"' "$SVG_FILE" || true; } | { sed 's/.*id="//; s/".*//' || true; } | sort -u )
 
 MISSING=0
 for ref in $MARKER_REFS; do
@@ -110,7 +116,7 @@ fi
 
 # Check 5: Arrow-component collision
 echo -n "Checking arrow collisions... "
-COLLISIONS=$(python3 - "$SVG_FILE" <<'PY'
+COLLISIONS=$($PYTHON - "$SVG_FILE" <<'PY'
 from pathlib import Path
 import re
 import sys
