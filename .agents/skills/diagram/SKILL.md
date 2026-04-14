@@ -41,16 +41,25 @@ Run with `--help` first to see options:
    - See `resources/` for 7 complete examples (one per style)
    - See [tech-diagram.md](references/tech-diagram.md) for shape vocabulary and arrow semantics
 
-4. **Generate the SVG**:
+4. **Save JSON** to a temp file first (avoids shell escaping issues):
    ```bash
-   # Complex diagrams (containers, swim lanes, port routing)
-   python3 scripts/generate-from-template.py <type> output.svg '<json>'
-
-   # Simple diagrams (just nodes + edges)
-   echo '<json>' | python3 scripts/svg-gen.py -o output.svg --style flat-icon
+   # Write JSON to file
+   cat > /tmp/diagram-input.json << 'EOF'
+   { "nodes": [...], "edges": [...] }
+   EOF
    ```
 
-5. **Validate** before delivering:
+5. **Generate the SVG**:
+   ```bash
+   # Complex diagrams (containers, swim lanes, port routing) — use -i flag
+   python3 scripts/generate-from-template.py <type> output.svg -i /tmp/diagram-input.json
+
+   # Simple diagrams (just nodes + edges) — pipe via stdin
+   cat /tmp/diagram-input.json | python3 scripts/svg-gen.py -o output.svg --style flat-icon
+   ```
+   Note: `svg-gen.py` does NOT support containers/absolute positioning. Use `generate-from-template.py` for complex diagrams.
+
+6. **Validate** before delivering:
    ```bash
    bash scripts/validate-svg.sh output.svg
    ```

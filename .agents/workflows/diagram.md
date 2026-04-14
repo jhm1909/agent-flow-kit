@@ -52,16 +52,16 @@ description: Generates production-quality SVG diagrams from text descriptions, w
 
 // turbo
 
-1. **Invoke `[diagram]` skill** — run the appropriate script:
+1. **Invoke `[diagram]` skill** — save JSON to a temp file first, then generate:
    - **Complex diagrams** (containers, ports, swim lanes):
      ```bash
-     python3 scripts/generate-from-template.py <type> output.svg '<json>'
+     python3 scripts/generate-from-template.py <type> output.svg -i /tmp/diagram-input.json
      ```
    - **Simple diagrams** (nodes + edges only):
      ```bash
-     echo '<json>' | python3 scripts/svg-gen.py -o output.svg --style <style>
+     cat /tmp/diagram-input.json | python3 scripts/svg-gen.py -o output.svg --style <style>
      ```
-2. Check exit code — 0 = success.
+2. Check exit code — 0 = success. Always write JSON to file first (avoids shell escaping issues on Windows).
 
 ---
 

@@ -565,6 +565,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Invalid JSON: {exc}", file=sys.stderr)
         return 1
 
+    # Warn if input has features this script doesn't support
+    if "containers" in data:
+        print("Warning: svg-gen.py ignores 'containers'. For container/swim-lane support, use generate-from-template.py instead.", file=sys.stderr)
+    if any("x" in n and "y" in n for n in data.get("nodes", [])):
+        print("Warning: svg-gen.py ignores absolute x/y positions. It uses auto-layout based on 'layer' field.", file=sys.stderr)
+
     # Generate SVG
     try:
         svg_content = build_svg(data, style_name=args.style)

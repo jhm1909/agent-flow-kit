@@ -1529,14 +1529,26 @@ def build_svg(template_type: str, data: Dict[str, object]) -> str:
 
 def main() -> None:
     if len(sys.argv) < 3:
-        print("Usage: python3 generate-from-template.py <template-type> <output-path> [data-json]")
+        print("Usage: python3 generate-from-template.py <template-type> <output-path> [-i input.json | '<json>' | stdin]")
+        print("")
+        print("Options:")
+        print("  -i, --input FILE   Read JSON from file (recommended on Windows)")
+        print("  '<json>'           Pass JSON as argument (Unix only)")
+        print("  stdin              Pipe JSON via stdin")
         sys.exit(1)
 
     template_type = sys.argv[1]
     output_path = sys.argv[2]
 
     try:
-        if len(sys.argv) > 3:
+        # Priority: -i/--input flag > argv[3] > stdin
+        if len(sys.argv) > 3 and sys.argv[3] in ("-i", "--input"):
+            if len(sys.argv) < 5:
+                print("Error: -i flag requires a file path", file=sys.stderr)
+                sys.exit(1)
+            with open(sys.argv[4], "r", encoding="utf-8") as f:
+                data = json.load(f)
+        elif len(sys.argv) > 3:
             data = json.loads(sys.argv[3])
         else:
             data = json.load(sys.stdin)
