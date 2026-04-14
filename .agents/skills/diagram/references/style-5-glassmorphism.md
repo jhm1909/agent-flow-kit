@@ -111,7 +111,7 @@ font-weight: 400 normal, 600 semi-bold, 700 bold titles
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600"
      width="960" height="600">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    /* No @import — rsvg-convert cannot fetch external fonts. Use system font stack. */
     text { font-family: 'Inter', -apple-system, sans-serif; fill: #f0f6fc; }
   </style>
   <defs>
