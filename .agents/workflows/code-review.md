@@ -28,7 +28,8 @@ description: Orchestrates code review using blast-radius analysis, risk scoring,
 
 1. **Invoke `[code-graph]` skill** — run blast-radius:
    ```bash
-   bash scripts/blast-radius.sh <changed-files>
+   mkdir -p .agents-output/code-graph/reports
+   bash skills/code-graph/scripts/blast-radius.sh --json <changed-files> > .agents-output/code-graph/reports/blast-radius.json
    ```
 2. Capture output: direct callers, transitive dependents, affected tests, risk level.
 3. If blast-radius > 50 files → warn user: "Large scope, review may be incomplete."

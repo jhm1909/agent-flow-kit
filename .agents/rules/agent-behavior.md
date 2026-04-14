@@ -25,11 +25,25 @@ These constraints apply to all skills and workflows in this toolkit.
 - If a script fails, show the error output and suggest a fix. Don't retry blindly.
 - Never silently swallow errors.
 
-## Output outside .agents/
+## Output to .agents-output/
 
-- **Never** write output files (SVG, PNG, JSON) inside `.agents/`. This directory is for configuration only.
-- Write output to the project root or a user-specified path (e.g. `./output/diagram.svg`, `./architecture.svg`).
-- Temporary files go to system temp directory or project root.
+- **Never** write output files inside `.agents/`. This directory is for configuration only.
+- All output goes to `.agents-output/` at project root with this structure:
+  ```
+  .agents-output/
+  ├── diagram/
+  │   ├── svg/        ← SVG output
+  │   ├── png/        ← PNG export
+  │   └── tmp/        ← JSON input files
+  ├── code-graph/
+  │   ├── reports/    ← blast-radius, hub-detect output
+  │   └── tmp/        ← temporary data
+  └── visualize/
+      ├── svg/        ← architecture diagrams
+      └── tmp/        ← intermediate JSON
+  ```
+- Create subdirectories with `mkdir -p` before writing.
+- If user specifies an absolute path, respect it.
 
 ## Keep output concise
 

@@ -572,14 +572,16 @@ def main(argv: list[str] | None = None) -> int:
     if any("x" in n and "y" in n for n in data.get("nodes", [])):
         print("Warning: svg-gen.py ignores absolute x/y positions. It uses auto-layout based on 'layer' field.", file=sys.stderr)
 
-    # Prevent writing inside .agents/ — redirect to project root
-    abs_out = os.path.abspath(args.output)
+    # Redirect output to .agents-output/diagram/svg/ (never inside .agents/)
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    skill_dir = os.path.abspath(os.path.join(script_dir, ".."))
-    if abs_out.startswith(skill_dir):
-        project_root = os.path.abspath(os.path.join(script_dir, "..", "..", "..", ".."))
-        args.output = os.path.join(project_root, os.path.basename(args.output))
-        print(f"Note: Redirected output to project root: {args.output}", file=sys.stderr)
+    project_root = os.path.abspath(os.path.join(script_dir, "..", "..", "..", ".."))
+    abs_out = os.path.abspath(args.output)
+    agents_dir = os.path.join(project_root, ".agents")
+    if abs_out.startswith(agents_dir) or not os.path.isabs(args.output):
+        out_dir = os.path.join(project_root, ".agents-output", "diagram", "svg")
+        os.makedirs(out_dir, exist_ok=True)
+        args.output = os.path.join(out_dir, os.path.basename(args.output))
+        print(f"Output: {args.output}", file=sys.stderr)
 
     # Generate SVG
     try:

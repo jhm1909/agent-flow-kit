@@ -1540,13 +1540,15 @@ def main() -> None:
     template_type = sys.argv[1]
     output_path = sys.argv[2]
 
-    # Prevent writing inside .agents/ — redirect to project root
+    # Redirect output to .agents-output/diagram/svg/ (never inside .agents/)
+    project_root = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", "..", ".."))
     abs_out = os.path.abspath(output_path)
-    if os.sep + ".agents" + os.sep in abs_out or abs_out.startswith(os.path.abspath(os.path.join(SCRIPT_DIR, ".."))):
-        # Resolve relative to project root (3 levels up from scripts/)
-        project_root = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", "..", ".."))
-        output_path = os.path.join(project_root, os.path.basename(output_path))
-        print(f"Note: Redirected output to project root: {output_path}", file=sys.stderr)
+    agents_dir = os.path.join(project_root, ".agents")
+    if abs_out.startswith(agents_dir) or not os.path.isabs(output_path):
+        out_dir = os.path.join(project_root, ".agents-output", "diagram", "svg")
+        os.makedirs(out_dir, exist_ok=True)
+        output_path = os.path.join(out_dir, os.path.basename(output_path))
+        print(f"Output: {output_path}", file=sys.stderr)
 
     try:
         # Priority: -i/--input flag > argv[3] > stdin

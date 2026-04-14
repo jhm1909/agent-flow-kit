@@ -14,7 +14,8 @@ description: Auto-generates architecture diagram from codebase analysis. Combine
 
 1. **Invoke `[code-graph]` skill** — run hub detection with JSON output:
    ```bash
-   bash skills/code-graph/scripts/hub-detect.sh --json > arch-data.json
+   mkdir -p .agents-output/visualize/tmp
+   bash skills/code-graph/scripts/hub-detect.sh --json > .agents-output/visualize/tmp/arch-data.json
    ```
 2. If output shows `"total_files": 0` → inform user and stop.
 3. Review the JSON: check node count, hub/bridge distribution.
@@ -27,14 +28,15 @@ description: Auto-generates architecture diagram from codebase analysis. Combine
 
 1. **Invoke `[diagram]` skill** — pipe JSON directly to SVG generator:
    ```bash
-   cat arch-data.json | python3 skills/diagram/scripts/svg-gen.py -o architecture.svg --style blueprint
+   mkdir -p .agents-output/visualize/svg
+   cat .agents-output/visualize/tmp/arch-data.json | python3 skills/diagram/scripts/svg-gen.py -o .agents-output/visualize/svg/architecture.svg --style blueprint
    ```
    Default style: `blueprint` (best for architecture diagrams per `style-diagram-matrix.md`).
 2. Validate:
    ```bash
-   bash skills/diagram/scripts/validate-svg.sh architecture.svg
+   bash skills/diagram/scripts/validate-svg.sh .agents-output/visualize/svg/architecture.svg
    ```
-3. If the auto-generated diagram needs refinement, edit `arch-data.json` (add labels, adjust layers) and regenerate.
+3. If the auto-generated diagram needs refinement, edit `.agents-output/visualize/tmp/arch-data.json` and regenerate.
 
 ---
 
