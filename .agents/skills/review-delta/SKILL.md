@@ -8,6 +8,8 @@ description: >-
 
 # Review Delta
 
+> **Execution context:** Cross-skill script paths use `../` relative references.
+
 Focused, token-efficient review of the most recent changes and their impact.
 
 ## When to use this skill
@@ -24,7 +26,7 @@ Focused, token-efficient review of the most recent changes and their impact.
 ### 1. Get recent changes (auto-detect)
 
 ```bash
-bash skills/code-graph/scripts/blast-radius.sh
+bash ../code-graph/scripts/blast-radius.sh
 # No args = auto-detects from git diff HEAD~1..HEAD
 ```
 

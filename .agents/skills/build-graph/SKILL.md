@@ -8,6 +8,8 @@ description: >-
 
 # Build Graph
 
+> **Execution context:** Cross-skill script paths use `../` relative references.
+
 Initialize or refresh the code analysis for a repository.
 
 ## When to use this skill
@@ -25,8 +27,8 @@ The shell scripts (`blast-radius.sh`, `hub-detect.sh`) scan the codebase fresh o
 
 ```bash
 # These build the graph implicitly
-bash skills/code-graph/scripts/blast-radius.sh
-bash skills/code-graph/scripts/hub-detect.sh
+bash ../code-graph/scripts/blast-radius.sh
+bash ../code-graph/scripts/hub-detect.sh
 ```
 
 ### Python engine (optional — deeper analysis)

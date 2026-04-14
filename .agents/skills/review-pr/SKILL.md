@@ -8,6 +8,8 @@ description: >-
 
 # Review PR
 
+> **Execution context:** Cross-skill script paths use `../` relative references.
+
 Full structural code review of a pull request or branch diff.
 
 ## When to use this skill
@@ -30,7 +32,7 @@ git diff --name-only main...HEAD
 ### 2. Run blast-radius on ALL changed files
 
 ```bash
-bash skills/code-graph/scripts/blast-radius.sh $(git diff --name-only main...HEAD)
+bash ../code-graph/scripts/blast-radius.sh $(git diff --name-only main...HEAD)
 ```
 
 ### 3. Review based on risk level

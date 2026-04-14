@@ -9,6 +9,8 @@ description: >-
 
 # Diagram
 
+> **Execution context:** Script paths are relative to this skill directory (`.agents/skills/diagram/`).
+
 Generate production-quality SVG diagrams from natural language descriptions.
 
 ## When to use this skill

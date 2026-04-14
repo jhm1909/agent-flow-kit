@@ -8,6 +8,8 @@ description: >-
 
 # Code Graph
 
+> **Execution context:** Script paths are relative to this skill directory (`.agents/skills/code-graph/`).
+
 Analyze codebase structure and change impact through import graph analysis.
 
 ## When to use this skill
@@ -95,7 +97,7 @@ Use `--json` when:
 
 3. **Generate architecture diagram** (chain with diagram skill):
    ```bash
-   bash scripts/hub-detect.sh --json | python3 skills/diagram/scripts/svg-gen.py -o arch.svg --style blueprint --output-dir .agents-output/visualize/svg
+   bash scripts/hub-detect.sh --json | python3 ../diagram/scripts/svg-gen.py -o arch.svg --style blueprint --output-dir .agents-output/visualize/svg
    ```
 
 ### Optional: full Python engine
