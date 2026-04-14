@@ -4,6 +4,8 @@ description: Generates production-quality SVG diagrams from text descriptions, w
 
 # Diagram Generation Workflow
 
+> **Execution context:** All script paths are relative to the `.agents/` root directory.
+
 ---
 
 ## Step 1: Understand Requirements

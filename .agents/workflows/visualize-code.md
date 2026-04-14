@@ -4,6 +4,8 @@ description: Auto-generates architecture diagram from codebase analysis. Combine
 
 # Visualize Codebase Workflow
 
+> **Execution context:** All script paths are relative to the `.agents/` root directory.
+
 ---
 
 ## Step 1: Analyze & Generate JSON
@@ -36,7 +38,7 @@ description: Auto-generates architecture diagram from codebase analysis. Combine
 
 ---
 
-## Step 4: Deliver
+## Step 3: Deliver
 
 // turbo
 

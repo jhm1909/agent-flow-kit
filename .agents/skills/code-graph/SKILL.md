@@ -61,14 +61,9 @@ For deeper analysis (AST parsing, execution flows, community detection), install
 pip install code-review-graph
 ```
 
-See [commands.md](references/commands.md) for CLI usage and [features.md](references/features.md) for capabilities.
-
 ## References
 
 | File | Use when |
 |------|----------|
 | [blast-radius.md](references/blast-radius.md) | Need risk scoring methodology details |
 | [architecture.md](references/architecture.md) | Understanding the full graph engine design |
-| [commands.md](references/commands.md) | Using the pip-installed CLI |
-| [features.md](references/features.md) | Full feature list of the Python engine |
-| [schema.md](references/schema.md) | SQLite database schema details |

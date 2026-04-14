@@ -42,3 +42,9 @@ Focused review of only the most recent changes and their impact.
 - Only examines changed + impacted code (fewer tokens)
 - Automatically identifies blast radius
 - Fast iteration cycle for active development
+
+## References
+
+| File | Use when |
+|------|----------|
+| [blast-radius.md](../code-graph/references/blast-radius.md) | Need risk scoring methodology details |

@@ -4,6 +4,8 @@ description: Orchestrates code review using blast-radius analysis, risk scoring,
 
 # Code Review Workflow
 
+> **Execution context:** All script paths are relative to the `.agents/` root directory.
+
 ---
 
 ## Step 1: Identify Changes
