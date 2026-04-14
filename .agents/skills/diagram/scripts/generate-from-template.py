@@ -1527,20 +1527,8 @@ def build_svg(template_type: str, data: Dict[str, object]) -> str:
     return "\n".join(line for line in lines if line)
 
 
-def main() -> None:
-    if len(sys.argv) < 3:
-        print("Usage: python3 generate-from-template.py <template-type> <output-path> [-i input.json | '<json>' | stdin]")
-        print("")
-        print("Options:")
-        print("  -i, --input FILE   Read JSON from file (recommended on Windows)")
-        print("  '<json>'           Pass JSON as argument (Unix only)")
-        print("  stdin              Pipe JSON via stdin")
-        sys.exit(1)
-
-    template_type = sys.argv[1]
-    output_path = sys.argv[2]
-
-    # Redirect output to .agents-output/diagram/svg/ (never inside .agents/)
+def _resolve_output_path(output_path: str) -> str:
+    """Redirect output to .agents-output/diagram/svg/ if inside .agents/."""
     project_root = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", "..", ".."))
     abs_out = os.path.abspath(output_path)
     agents_dir = os.path.join(project_root, ".agents")
@@ -1549,20 +1537,32 @@ def main() -> None:
         os.makedirs(out_dir, exist_ok=True)
         output_path = os.path.join(out_dir, os.path.basename(output_path))
         print(f"Output: {output_path}", file=sys.stderr)
+    return output_path
+
+
+def main() -> None:
+    import argparse as _ap
+    parser = _ap.ArgumentParser(
+        description="Generate SVG diagrams from JSON + templates",
+        usage="python3 generate-from-template.py <type> <output> [-i FILE | '<json>' | stdin]",
+    )
+    parser.add_argument("template_type", help="Diagram type (architecture, flowchart, sequence, etc.)")
+    parser.add_argument("output", help="Output SVG path")
+    parser.add_argument("-i", "--input", dest="input_file", help="JSON input file (recommended on Windows)")
+    parser.add_argument("json_arg", nargs="?", help="JSON string (Unix only)")
+    args = parser.parse_args()
+
+    output_path = _resolve_output_path(args.output)
 
     try:
-        # Priority: -i/--input flag > argv[3] > stdin
-        if len(sys.argv) > 3 and sys.argv[3] in ("-i", "--input"):
-            if len(sys.argv) < 5:
-                print("Error: -i flag requires a file path", file=sys.stderr)
-                sys.exit(1)
-            with open(sys.argv[4], "r", encoding="utf-8") as f:
+        if args.input_file:
+            with open(args.input_file, "r", encoding="utf-8") as f:
                 data = json.load(f)
-        elif len(sys.argv) > 3:
-            data = json.loads(sys.argv[3])
+        elif args.json_arg:
+            data = json.loads(args.json_arg)
         else:
             data = json.load(sys.stdin)
-        svg_content = build_svg(template_type, data)
+        svg_content = build_svg(args.template_type, data)
         with open(output_path, "w", encoding="utf-8") as handle:
             handle.write(svg_content)
         print(f"✓ SVG generated: {output_path}")

@@ -497,6 +497,24 @@ def validate_svg(svg_content: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
+# Output path resolution
+# ---------------------------------------------------------------------------
+
+def _resolve_output(output_path: str) -> str:
+    """Redirect output to .agents-output/diagram/svg/ if inside .agents/."""
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.abspath(os.path.join(script_dir, "..", "..", "..", ".."))
+    abs_out = os.path.abspath(output_path)
+    agents_dir = os.path.join(project_root, ".agents")
+    if abs_out.startswith(agents_dir) or not os.path.isabs(output_path):
+        out_dir = os.path.join(project_root, ".agents-output", "diagram", "svg")
+        os.makedirs(out_dir, exist_ok=True)
+        output_path = os.path.join(out_dir, os.path.basename(output_path))
+        print(f"Output: {output_path}", file=sys.stderr)
+    return output_path
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -573,15 +591,7 @@ def main(argv: list[str] | None = None) -> int:
         print("Warning: svg-gen.py ignores absolute x/y positions. It uses auto-layout based on 'layer' field.", file=sys.stderr)
 
     # Redirect output to .agents-output/diagram/svg/ (never inside .agents/)
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.abspath(os.path.join(script_dir, "..", "..", "..", ".."))
-    abs_out = os.path.abspath(args.output)
-    agents_dir = os.path.join(project_root, ".agents")
-    if abs_out.startswith(agents_dir) or not os.path.isabs(args.output):
-        out_dir = os.path.join(project_root, ".agents-output", "diagram", "svg")
-        os.makedirs(out_dir, exist_ok=True)
-        args.output = os.path.join(out_dir, os.path.basename(args.output))
-        print(f"Output: {args.output}", file=sys.stderr)
+    args.output = _resolve_output(args.output)
 
     # Generate SVG
     try:
