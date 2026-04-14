@@ -1,56 +1,82 @@
 ---
 name: review-pr
-description: Reviews a pull request using blast-radius analysis and risk scoring. Use when asked to review a PR, check code changes, or assess merge readiness.
+description: >-
+  Performs full PR review with blast-radius analysis and structured output.
+  Use when reviewing a complete pull request, checking merge readiness,
+  or assessing multi-commit changes against a base branch.
 ---
 
 # Review PR
 
-Perform a structured code review of a pull request with blast-radius analysis.
+Full structural code review of a pull request or branch diff.
 
 ## When to use this skill
 
-- Asked to review a PR or branch diff
-- Checking if changes are safe to merge
-- Need a risk assessment of code changes
+- Reviewing a complete PR (multiple commits)
+- Checking if a branch is safe to merge
+- Need blast-radius across ALL commits (not just last one)
+- User says "review this PR" or "is this ready to merge?"
+
+**For quick single-commit reviews** → use `[review-delta]` instead.
 
 ## How to use it
 
-1. **Identify changed files**:
-   ```bash
-   git diff --name-only main...HEAD
-   ```
+### 1. Identify the changes
 
-2. **Run blast-radius analysis**:
-   ```bash
-   bash skills/code-graph/scripts/blast-radius.sh <changed-files>
-   ```
+```bash
+git diff --name-only main...HEAD
+```
 
-3. **Review based on risk level**:
-   - Read files in priority order: CHANGED → CALLER → TEST → TRANSITIVE
-   - For high-risk functions, check who calls them and whether tests cover them
-   - Look for: removed validation, broken public APIs, missing tests
+### 2. Run blast-radius on ALL changed files
 
-4. **Report findings** using this structure:
-   ```
-   ## PR Review: <title>
+```bash
+bash skills/code-graph/scripts/blast-radius.sh $(git diff --name-only main...HEAD)
+```
 
-   ### Summary
-   <1-3 sentence overview>
+### 3. Review based on risk level
 
-   ### Risk Assessment
-   - Overall risk: Low / Medium / High
-   - Blast radius: X files impacted
-   - Test coverage gaps: <list>
+Follow the escalation pattern from `[code-graph]` skill:
+- **LOW** → skim changed files
+- **MEDIUM** → read changed + direct callers
+- **HIGH/CRITICAL** → read entire blast radius + run hub detection
 
-   ### Issues Found
-   - <file:line> — <description>
+### 4. For each reviewed file, check
 
-   ### Recommendations
-   1. <actionable suggestion>
-   ```
+- **Security**: auth/validation removed? access control weakened?
+- **API contracts**: public interfaces changed? breaking changes?
+- **Test coverage**: changed functions have tests? new code untested?
+- **Dependencies**: new imports? removed dependencies still used elsewhere?
+
+### 5. Generate structured report
+
+```
+## PR Review: <title>
+
+### Summary
+<1-3 sentence overview>
+
+### Risk Assessment
+- **Overall risk**: Low / Medium / High / Critical
+- **Blast radius**: X files, Y direct callers impacted
+- **Test coverage**: N changed functions covered / M total
+
+### File-by-File Review
+#### <file_path>
+- **Changes**: <what changed>
+- **Impact**: <who depends on this>
+- **Issues**: <bugs, concerns>
+
+### Test Coverage Gaps
+- <function> in <file> — no test coverage found
+
+### Recommendations
+1. <specific, actionable>
+2. <specific, actionable>
+```
 
 ## Tips
 
-- Focus on highest-impact files first (most dependents in blast radius)
-- Check if renamed/moved functions have updated all callers
-- For large PRs (50+ files), warn user that review may be incomplete
+- Focus on highest-impact files first (most dependents from blast radius)
+- Check if renamed/moved functions updated all callers
+- For large PRs (50+ files) → warn user review may be incomplete
+- Run hub detection to see if changed files are architectural hotspots

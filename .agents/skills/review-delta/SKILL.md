@@ -1,50 +1,62 @@
 ---
 name: review-delta
-description: Reviews only changes since last commit using blast-radius detection. Token-efficient delta review. Use for quick reviews of recent changes.
+description: >-
+  Quick review of only changes since last commit using blast-radius detection.
+  Token-efficient delta review. Use for fast iteration reviews during development,
+  checking if recent edits broke anything, or reviewing a single commit.
 ---
 
 # Review Delta
 
-Focused review of only the most recent changes and their impact.
+Focused, token-efficient review of the most recent changes and their impact.
 
 ## When to use this skill
 
-- Quick review of changes since last commit
+- Quick review during active development (after each commit)
+- Checking if recent edits introduced bugs
 - Want a lighter review than full PR review
-- Checking if recent edits broke anything
+- Reviewing a single commit (not multi-commit PR)
+
+**For full PR reviews** (multiple commits, merge readiness) → use `[review-pr]` instead.
 
 ## How to use it
 
-1. **Get changed files**:
-   ```bash
-   git diff --name-only HEAD~1..HEAD
-   ```
+### 1. Get recent changes (auto-detect)
 
-2. **Run blast-radius analysis**:
-   ```bash
-   bash skills/code-graph/scripts/blast-radius.sh
-   # No args = auto-detects from git diff
-   ```
+```bash
+bash skills/code-graph/scripts/blast-radius.sh
+# No args = auto-detects from git diff HEAD~1..HEAD
+```
 
-3. **Focus review** on the blast radius output:
-   - Review changed code for correctness and style
-   - Check if callers/dependents need updates
-   - Flag untested changed functions
+### 2. Read the risk level and follow escalation
 
-4. **Report findings**:
-   - **Summary**: One-line overview
-   - **Risk level**: Based on blast radius size
-   - **Issues**: Bugs, style, missing tests
-   - **Blast radius**: Impacted files/functions
+- **LOW**: Skim changed files only. Check for obvious issues. Done.
+- **MEDIUM**: Read changed files + direct callers. Check test gaps.
+- **HIGH**: Escalate — recommend using `/code-review` workflow instead.
 
-## Advantages over full review
+### 3. Focus review on blast-radius output
 
-- Only examines changed + impacted code (fewer tokens)
-- Automatically identifies blast radius
-- Fast iteration cycle for active development
+For each changed file:
+- Correctness: does the code do what it should?
+- Style: follows project conventions?
+- Callers: do upstream consumers need updates?
+- Tests: does changed behavior have test coverage?
 
-## References
+### 4. Report findings
 
-| File | Use when |
-|------|----------|
-| [blast-radius.md](../code-graph/references/blast-radius.md) | Need risk scoring methodology details |
+```
+## Delta Review
+
+- **Summary**: <one line>
+- **Risk level**: <from blast-radius>
+- **Issues**: <list with file:line>
+- **Test gaps**: <untested changed functions>
+- **Blast radius**: <N files impacted>
+```
+
+## Advantages over full PR review
+
+- Examines only changed + impacted code (5-10x fewer tokens)
+- Auto-detects changes from git diff (no args needed)
+- Fast iteration: run after each commit during development
+- Naturally escalates to full review when risk is HIGH
