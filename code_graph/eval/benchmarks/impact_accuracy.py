@@ -37,7 +37,7 @@ def run(repo_path: Path, store, config: dict) -> list[dict]:
 
         # Get predicted impact from our tool
         try:
-            from code_review_graph.changes import analyze_changes
+            from code_graph.changes import analyze_changes
             analysis = analyze_changes(
                 store, changed, repo_root=str(repo_path),
                 base=tc["sha"] + "~1",

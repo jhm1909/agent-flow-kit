@@ -255,7 +255,7 @@ class GraphStore:
         # __init__, but external code accessing _conn directly (e.g.
         # _compute_summaries, flows.py, communities.py) could still leave
         # a transaction open.
-        # See: https://github.com/tirth8205/code-review-graph/issues/135
+        # See: https://github.com/tirth8205/code-graph/issues/135
         if self._conn.in_transaction:
             logger.warning("Flushing unexpected open transaction before BEGIN IMMEDIATE")
             self._conn.commit()

@@ -141,7 +141,7 @@ def export_graph_data(store: GraphStore) -> dict:
 
     # Include flows (graceful fallback if table doesn't exist)
     try:
-        from code_review_graph.flows import get_flows
+        from code_graph.flows import get_flows
         flows = get_flows(store, limit=100)
     except (ImportError, sqlite3.OperationalError) as exc:
         logger.debug("flows unavailable for export: %s", exc)
@@ -149,7 +149,7 @@ def export_graph_data(store: GraphStore) -> dict:
 
     # Include communities (graceful fallback if table doesn't exist)
     try:
-        from code_review_graph.communities import get_communities
+        from code_graph.communities import get_communities
         communities = get_communities(store)
     except (ImportError, sqlite3.OperationalError) as exc:
         logger.debug("communities unavailable for export: %s", exc)

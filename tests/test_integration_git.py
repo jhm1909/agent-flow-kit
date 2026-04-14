@@ -16,16 +16,16 @@ from pathlib import Path
 
 import pytest
 
-from code_review_graph.changes import parse_git_diff_ranges
-from code_review_graph.graph import GraphStore
-from code_review_graph.incremental import (
+from code_graph.changes import parse_git_diff_ranges
+from code_graph.graph import GraphStore
+from code_graph.incremental import (
     collect_all_files,
     full_build,
     get_all_tracked_files,
     get_changed_files,
     incremental_update,
 )
-from code_review_graph.wiki import get_wiki_page
+from code_graph.wiki import get_wiki_page
 
 
 def _git(repo: Path, *args: str) -> subprocess.CompletedProcess[str]:
@@ -217,7 +217,7 @@ def test_full_build_with_recurse_submodules(
     git_repo_with_submodule: Path,
 ) -> None:
     """full_build with recurse_submodules parses submodule files."""
-    db_path = git_repo_with_submodule / ".code-review-graph" / "graph.db"
+    db_path = git_repo_with_submodule / ".code-graph" / "graph.db"
     db_path.parent.mkdir(parents=True, exist_ok=True)
     store = GraphStore(db_path)
     try:

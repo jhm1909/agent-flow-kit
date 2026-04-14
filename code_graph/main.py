@@ -1,6 +1,6 @@
 """MCP server entry point for Code Review Graph.
 
-Run as: code-review-graph serve
+Run as: code-graph serve
 Communicates via stdio (standard MCP transport).
 """
 
@@ -62,7 +62,7 @@ def _resolve_repo_root(repo_root: Optional[str]) -> Optional[str]:
 
     Order of precedence:
     1. Explicit ``repo_root`` passed by the MCP client (highest).
-    2. ``--repo`` CLI flag passed to ``code-review-graph serve``
+    2. ``--repo`` CLI flag passed to ``code-graph serve``
        (captured in ``_default_repo_root``).
     3. None — the underlying impl will fall back to the server's cwd.
 
@@ -74,7 +74,7 @@ def _resolve_repo_root(repo_root: Optional[str]) -> Optional[str]:
 
 
 mcp = FastMCP(
-    "code-review-graph",
+    "code-graph",
     instructions=(
         "Persistent incremental knowledge graph for token-efficient, "
         "context-aware code reviews. Parses your codebase with Tree-sitter, "
@@ -303,7 +303,7 @@ async def embed_graph_tool(
 ) -> dict:
     """Compute vector embeddings for all graph nodes to enable semantic search.
 
-    Requires: pip install code-review-graph[embeddings]
+    Requires: pip install code-graph[embeddings]
     Default model: all-MiniLM-L6-v2. Override via `model` param or
     CRG_EMBEDDING_MODEL env var (any sentence-transformers compatible model).
     Changing the model re-embeds all nodes automatically.
@@ -643,7 +643,7 @@ async def generate_wiki_tool(
     """Generate a markdown wiki from the code community structure.
 
     Creates a wiki page for each detected community and an index page.
-    Pages are written to .code-review-graph/wiki/ inside the repository.
+    Pages are written to .code-graph/wiki/ inside the repository.
     Only regenerates pages whose content has changed unless force=True.
 
     Offloaded to a thread via ``asyncio.to_thread`` — on large graphs
@@ -809,7 +809,7 @@ def traverse_graph_tool(
 def list_repos_tool() -> dict:
     """List all registered repositories in the multi-repo registry.
 
-    Returns the list of repos registered at ~/.code-review-graph/registry.json.
+    Returns the list of repos registered at ~/.code-graph/registry.json.
     Use the CLI 'register' command to add repos.
     """
     return list_repos_func()

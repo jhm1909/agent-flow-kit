@@ -13,7 +13,7 @@ try:
 except ImportError:
     yaml = None  # type: ignore[assignment]
 
-from code_review_graph.eval.benchmarks import (
+from code_graph.eval.benchmarks import (
     build_performance,
     flow_completeness,
     impact_accuracy,
@@ -38,7 +38,7 @@ DEFAULT_REPOS = Path("evaluate/test_repos")
 
 def _require_yaml():
     if yaml is None:
-        raise ImportError("pyyaml is required: pip install code-review-graph[eval]")
+        raise ImportError("pyyaml is required: pip install code-graph[eval]")
 
 
 def load_config(name: str) -> dict:
@@ -134,8 +134,8 @@ def run_eval(
         repo_path = clone_or_update(config)
 
         # Build graph
-        from code_review_graph.graph import GraphStore
-        from code_review_graph.incremental import full_build, get_db_path
+        from code_graph.graph import GraphStore
+        from code_graph.incremental import full_build, get_db_path
 
         db_path = get_db_path(repo_path)
         store = GraphStore(db_path)

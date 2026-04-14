@@ -2,18 +2,18 @@
 
 ## Skills (Claude Code slash commands)
 
-### `/code-review-graph:build-graph`
+### `/code-graph:build-graph`
 Build or update the knowledge graph.
 - First time: performs a full build
 - Subsequent: incremental update (only changed files)
 
-### `/code-review-graph:review-delta`
+### `/code-graph:review-delta`
 Review only changes since last commit.
 - Auto-detects changed files via git diff
 - Computes blast radius (2-hop default)
 - Generates structured review with guidance
 
-### `/code-review-graph:review-pr`
+### `/code-graph:review-pr`
 Review a PR or branch diff.
 - Uses main/master as base
 - Full impact analysis across all PR commits
@@ -70,7 +70,7 @@ model: str | None    # Embedding model (falls back to CRG_EMBEDDING_MODEL env va
 repo_root: str | None
 model: str | None    # Embedding model name
 ```
-Requires: `pip install code-review-graph[embeddings]`
+Requires: `pip install code-graph[embeddings]`
 
 #### `list_graph_stats_tool`
 ```
@@ -224,35 +224,35 @@ base: str = "HEAD~1"
 
 ```bash
 # Setup
-code-review-graph install           # Register MCP server with Claude Code (alias: init)
-code-review-graph install --dry-run # Preview without writing files
+code-graph install           # Register MCP server with Claude Code (alias: init)
+code-graph install --dry-run # Preview without writing files
 
 # Build and update
-code-review-graph build                        # Full build
-code-review-graph update                       # Incremental update
-code-review-graph update --base origin/main    # Custom base ref
+code-graph build                        # Full build
+code-graph update                       # Incremental update
+code-graph update --base origin/main    # Custom base ref
 
 # Monitor and inspect
-code-review-graph status                       # Graph statistics
-code-review-graph watch                        # Auto-update on file changes
-code-review-graph visualize                    # Generate interactive HTML graph
+code-graph status                       # Graph statistics
+code-graph watch                        # Auto-update on file changes
+code-graph visualize                    # Generate interactive HTML graph
 
 # Analysis
-code-review-graph detect-changes               # Risk-scored change analysis
-code-review-graph detect-changes --base HEAD~3 # Custom base ref
-code-review-graph detect-changes --brief       # Compact output
+code-graph detect-changes               # Risk-scored change analysis
+code-graph detect-changes --base HEAD~3 # Custom base ref
+code-graph detect-changes --brief       # Compact output
 
 # Wiki
-code-review-graph wiki                         # Generate markdown wiki from communities
+code-graph wiki                         # Generate markdown wiki from communities
 
 # Multi-repo
-code-review-graph register <path> [--alias name]  # Register a repository
-code-review-graph unregister <path_or_alias>       # Remove from registry
-code-review-graph repos                            # List registered repositories
+code-graph register <path> [--alias name]  # Register a repository
+code-graph unregister <path_or_alias>       # Remove from registry
+code-graph repos                            # List registered repositories
 
 # Evaluation
-code-review-graph eval                         # Run evaluation benchmarks
+code-graph eval                         # Run evaluation benchmarks
 
 # Server
-code-review-graph serve                        # Start MCP server (stdio)
+code-graph serve                        # Start MCP server (stdio)
 ```

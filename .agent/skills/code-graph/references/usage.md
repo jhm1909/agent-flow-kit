@@ -5,9 +5,9 @@
 ## Installation
 
 ```bash
-pip install code-review-graph
-code-review-graph install    # auto-detects and configures all supported platforms
-code-review-graph build      # parse your codebase
+pip install code-graph
+code-graph install    # auto-detects and configures all supported platforms
+code-graph build      # parse your codebase
 ```
 
 `install` detects which AI coding tools you have and writes the correct MCP configuration for each one. Restart your editor/tool after installing.
@@ -15,9 +15,9 @@ code-review-graph build      # parse your codebase
 To target a specific platform instead of auto-detecting all:
 
 ```bash
-code-review-graph install --platform codex
-code-review-graph install --platform cursor
-code-review-graph install --platform claude-code
+code-graph install --platform codex
+code-graph install --platform cursor
+code-graph install --platform claude-code
 ```
 
 ### Supported Platforms
@@ -36,38 +36,38 @@ code-review-graph install --platform claude-code
 
 ### 1. Build the graph (first time only)
 ```
-/code-review-graph:build-graph
+/code-graph:build-graph
 ```
 Parses your entire codebase. Takes ~10s for 500 files.
 
 ### 2. Review changes (daily use)
 ```
-/code-review-graph:review-delta
+/code-graph:review-delta
 ```
 Reviews only files changed since last commit + everything impacted. 5-10x fewer tokens than a full review.
 
 ### 3. Review a PR
 ```
-/code-review-graph:review-pr
+/code-graph:review-pr
 ```
 Comprehensive structural review of a branch diff with blast-radius analysis.
 
 ### 4. Watch mode (optional)
 ```bash
-code-review-graph watch
+code-graph watch
 ```
 Auto-updates the graph on every file save. Zero manual work.
 
 ### 5. Visualize the graph (optional)
 ```bash
-code-review-graph visualize
-open .code-review-graph/graph.html
+code-graph visualize
+open .code-graph/graph.html
 ```
 Interactive D3.js force-directed graph. Starts collapsed (File nodes only) — click a file to expand its children. Use the search bar to filter, and click legend edge types to toggle visibility.
 
 ### 6. Semantic search (optional)
 ```bash
-pip install "code-review-graph[embeddings]"
+pip install "code-graph[embeddings]"
 ```
 Then use `embed_graph_tool` to compute vectors. `semantic_search_nodes_tool` automatically uses vector similarity.
 
@@ -87,13 +87,13 @@ Uses `get_architecture_overview_tool` for community-based architecture map with 
 
 ### 9. Generate wiki (v2)
 ```bash
-code-review-graph wiki
+code-graph wiki
 ```
-Creates markdown wiki pages for each detected community in `.code-review-graph/wiki/`.
+Creates markdown wiki pages for each detected community in `.code-graph/wiki/`.
 
 ### 10. Multi-repo search (v2)
 ```bash
-code-review-graph register /path/to/other/repo --alias mylib
+code-graph register /path/to/other/repo --alias mylib
 ```
 Then use `cross_repo_search_tool` to search across all registered repositories.
 
@@ -121,7 +121,7 @@ See [schema.md](schema.md) for full details.
 By default, these paths are excluded from indexing:
 
 ```
-.code-review-graph/**    node_modules/**    .git/**
+.code-graph/**    node_modules/**    .git/**
 __pycache__/**           *.pyc              .venv/**
 venv/**                  dist/**            build/**
 .next/**                 target/**          *.min.js
@@ -130,7 +130,7 @@ package-lock.json        yarn.lock          *.db
 *.sqlite                 *.db-journal
 ```
 
-To add custom patterns, create a `.code-review-graphignore` file in your repo root (same syntax as `.gitignore`):
+To add custom patterns, create a `.code-graphignore` file in your repo root (same syntax as `.gitignore`):
 
 ```
 generated/**
@@ -138,4 +138,4 @@ vendor/**
 *.generated.ts
 ```
 
-In git repos, indexing is based on tracked files (`git ls-files`), so gitignored files are skipped automatically. Use `.code-review-graphignore` to exclude tracked files or when git isn't available.
+In git repos, indexing is based on tracked files (`git ls-files`), so gitignored files are skipped automatically. Use `.code-graphignore` to exclude tracked files or when git isn't available.

@@ -12,6 +12,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REFS_DIR="${SKILL_DIR}/.agent/skills/diagram/references"
 TEST_DIR="${SKILL_DIR}/test-output"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
@@ -44,7 +45,7 @@ for i in "${!STYLES[@]}"; do
     echo -e "\n${YELLOW}Style $STYLE: $STYLE_NAME${NC}"
     
     # Check if style reference exists
-    STYLE_FILE=$(find "${SKILL_DIR}/references" -maxdepth 1 -type f -name "style-${STYLE}-*.md" | head -n 1)
+    STYLE_FILE=$(find "${REFS_DIR}" -maxdepth 1 -type f -name "style-${STYLE}-*.md" | head -n 1)
     if [ -z "${STYLE_FILE:-}" ] || [ ! -f "$STYLE_FILE" ]; then
         echo -e "${RED}✗ Style file not found: $STYLE_FILE${NC}"
         FAILED=$((FAILED + 1))

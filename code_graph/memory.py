@@ -27,7 +27,7 @@ def save_result(
         nodes: Related node qualified names.
         result_type: Type of result (query, review, debug).
         memory_dir: Directory to save to. Defaults to
-            <repo>/.code-review-graph/memory/
+            <repo>/.code-graph/memory/
         repo_root: Repository root for default memory_dir.
 
     Returns:
@@ -39,7 +39,7 @@ def save_result(
                 "Either memory_dir or repo_root required"
             )
         memory_dir = (
-            repo_root / ".code-review-graph" / "memory"
+            repo_root / ".code-graph" / "memory"
         )
 
     memory_dir.mkdir(parents=True, exist_ok=True)
@@ -86,7 +86,7 @@ def list_memories(
         if repo_root is None:
             return []
         memory_dir = (
-            repo_root / ".code-review-graph" / "memory"
+            repo_root / ".code-graph" / "memory"
         )
 
     if not memory_dir.exists():
@@ -127,7 +127,7 @@ def clear_memories(
         if repo_root is None:
             return 0
         memory_dir = (
-            repo_root / ".code-review-graph" / "memory"
+            repo_root / ".code-graph" / "memory"
         )
 
     if not memory_dir.exists():

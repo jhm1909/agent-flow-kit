@@ -108,7 +108,8 @@ echo "Output: $SVG_FILE"
 
 # Load style reference
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-STYLE_FILE=$(find "${SKILL_DIR}/references" -maxdepth 1 -type f -name "style-${STYLE}-*.md" | head -n 1)
+REFS_DIR="${SKILL_DIR}/.agent/skills/diagram/references"
+STYLE_FILE=$(find "${REFS_DIR}" -maxdepth 1 -type f -name "style-${STYLE}-*.md" | head -n 1)
 
 if [ -z "${STYLE_FILE:-}" ] || [ ! -f "$STYLE_FILE" ]; then
     echo -e "${RED}Error: Style file not found: ${STYLE_FILE}${NC}"

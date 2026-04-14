@@ -5,9 +5,9 @@ from pathlib import Path
 
 import pytest
 
-from code_review_graph.graph import GraphStore, _sanitize_name, node_to_dict
-from code_review_graph.parser import EdgeInfo, NodeInfo
-from code_review_graph.tools import (
+from code_graph.graph import GraphStore, _sanitize_name, node_to_dict
+from code_graph.parser import EdgeInfo, NodeInfo
+from code_graph.tools import (
     get_affected_flows_func,
     get_architecture_overview_func,
     get_community_func,
@@ -266,7 +266,7 @@ class TestSanitizeName:
 
     def test_node_to_dict_uses_sanitize(self):
         """Verify that node_to_dict actually calls _sanitize_name."""
-        from code_review_graph.graph import GraphNode
+        from code_graph.graph import GraphNode
         node = GraphNode(
             id=1, kind="Function", name="evil\x00name",
             qualified_name="/test.py::evil\x00name", file_path="/test.py",
@@ -283,7 +283,7 @@ class TestFlowTools:
     """Tests for flow-related MCP tool functions."""
 
     def setup_method(self):
-        """Set up a temp dir with .git and .code-review-graph, seed data, build flows."""
+        """Set up a temp dir with .git and .code-graph, seed data, build flows."""
         self.tmp_dir = tempfile.mkdtemp()
         # Resolve symlinks (macOS /var -> /private/var) so paths match
         # what _validate_repo_root returns via Path.resolve().
@@ -291,9 +291,9 @@ class TestFlowTools:
 
         # Create markers so _validate_repo_root accepts this directory
         (self.root / ".git").mkdir()
-        (self.root / ".code-review-graph").mkdir()
+        (self.root / ".code-graph").mkdir()
 
-        db_path = str(self.root / ".code-review-graph" / "graph.db")
+        db_path = str(self.root / ".code-graph" / "graph.db")
         self.store = GraphStore(db_path)
         self._seed_data()
         self._build_flows()
@@ -358,7 +358,7 @@ class TestFlowTools:
 
     def _build_flows(self):
         """Trace and store flows."""
-        from code_review_graph.flows import store_flows, trace_flows
+        from code_graph.flows import store_flows, trace_flows
         flows = trace_flows(self.store)
         store_flows(self.store, flows)
 
@@ -492,15 +492,15 @@ class TestCommunityTools:
     """Tests for community-related MCP tool functions."""
 
     def setup_method(self):
-        """Set up a temp dir with .git and .code-review-graph, seed clustered graph."""
+        """Set up a temp dir with .git and .code-graph, seed clustered graph."""
         self.tmp_dir = tempfile.mkdtemp()
         self.root = Path(self.tmp_dir).resolve()
 
         # Create markers so _validate_repo_root accepts this directory
         (self.root / ".git").mkdir()
-        (self.root / ".code-review-graph").mkdir()
+        (self.root / ".code-graph").mkdir()
 
-        db_path = str(self.root / ".code-review-graph" / "graph.db")
+        db_path = str(self.root / ".code-graph" / "graph.db")
         self.store = GraphStore(db_path)
         self._seed_data()
         self._build_communities()
@@ -595,7 +595,7 @@ class TestCommunityTools:
 
     def _build_communities(self):
         """Detect and store communities."""
-        from code_review_graph.communities import detect_communities, store_communities
+        from code_graph.communities import detect_communities, store_communities
         comms = detect_communities(self.store)
         store_communities(self.store, comms)
 
@@ -708,10 +708,10 @@ class TestBuildPostprocess:
     def test_postprocess_none_produces_nodes_no_flows(self):
         from unittest.mock import patch
 
-        from code_review_graph.tools.build import build_or_update_graph
+        from code_graph.tools.build import build_or_update_graph
 
         with patch(
-            "code_review_graph.incremental.get_all_tracked_files",
+            "code_graph.incremental.get_all_tracked_files",
             return_value=["sample.py"],
         ):
             result = build_or_update_graph(
@@ -728,10 +728,10 @@ class TestBuildPostprocess:
     def test_postprocess_minimal_has_fts_no_flows(self):
         from unittest.mock import patch
 
-        from code_review_graph.tools.build import build_or_update_graph
+        from code_graph.tools.build import build_or_update_graph
 
         with patch(
-            "code_review_graph.incremental.get_all_tracked_files",
+            "code_graph.incremental.get_all_tracked_files",
             return_value=["sample.py"],
         ):
             result = build_or_update_graph(
@@ -747,10 +747,10 @@ class TestBuildPostprocess:
     def test_postprocess_full_matches_default(self):
         from unittest.mock import patch
 
-        from code_review_graph.tools.build import build_or_update_graph
+        from code_graph.tools.build import build_or_update_graph
 
         with patch(
-            "code_review_graph.incremental.get_all_tracked_files",
+            "code_graph.incremental.get_all_tracked_files",
             return_value=["sample.py"],
         ):
             result = build_or_update_graph(
@@ -897,7 +897,7 @@ class TestComputeSummaries:
         """risk_index rows must match per-node caller counts, test
         coverage, security flag, and risk scores derived from the
         seeded graph."""
-        from code_review_graph.tools.build import _compute_summaries
+        from code_graph.tools.build import _compute_summaries
 
         _compute_summaries(self.store)
 
@@ -961,7 +961,7 @@ class TestComputeSummaries:
         symbols, size, and dominant language."""
         import json as _json
 
-        from code_review_graph.tools.build import _compute_summaries
+        from code_graph.tools.build import _compute_summaries
 
         _compute_summaries(self.store)
 
@@ -1018,7 +1018,7 @@ class TestComputeSummaries:
         """
         import re
 
-        from code_review_graph.tools.build import _compute_summaries
+        from code_graph.tools.build import _compute_summaries
 
         conn = self.store._conn
         per_row_selects: list[str] = []
@@ -1070,9 +1070,9 @@ class TestGetMinimalContext:
         self.tmp = tempfile.mkdtemp()
         self.root = Path(self.tmp)
         (self.root / ".git").mkdir()
-        (self.root / ".code-review-graph").mkdir()
+        (self.root / ".code-graph").mkdir()
         # Create a small graph
-        db_path = self.root / ".code-review-graph" / "graph.db"
+        db_path = self.root / ".code-graph" / "graph.db"
         self.store = GraphStore(str(db_path))
         self.store.upsert_node(NodeInfo(
             kind="File", name="app.py", file_path=str(self.root / "app.py"),
@@ -1090,7 +1090,7 @@ class TestGetMinimalContext:
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_returns_required_keys(self):
-        from code_review_graph.tools.context import get_minimal_context
+        from code_graph.tools.context import get_minimal_context
 
         result = get_minimal_context(
             task="explore codebase", repo_root=str(self.root),
@@ -1102,7 +1102,7 @@ class TestGetMinimalContext:
     def test_output_is_compact(self):
         import json
 
-        from code_review_graph.tools.context import get_minimal_context
+        from code_graph.tools.context import get_minimal_context
 
         result = get_minimal_context(
             task="review changes", repo_root=str(self.root),
@@ -1111,7 +1111,7 @@ class TestGetMinimalContext:
         assert len(serialized) < 800
 
     def test_task_routing_review(self):
-        from code_review_graph.tools.context import get_minimal_context
+        from code_graph.tools.context import get_minimal_context
 
         result = get_minimal_context(
             task="review PR #42", repo_root=str(self.root),
@@ -1119,7 +1119,7 @@ class TestGetMinimalContext:
         assert "detect_changes" in result["next_tool_suggestions"]
 
     def test_task_routing_debug(self):
-        from code_review_graph.tools.context import get_minimal_context
+        from code_graph.tools.context import get_minimal_context
 
         result = get_minimal_context(
             task="debug login bug", repo_root=str(self.root),
@@ -1127,7 +1127,7 @@ class TestGetMinimalContext:
         assert "semantic_search_nodes" in result["next_tool_suggestions"]
 
     def test_task_routing_refactor(self):
-        from code_review_graph.tools.context import get_minimal_context
+        from code_graph.tools.context import get_minimal_context
 
         result = get_minimal_context(
             task="refactor auth module", repo_root=str(self.root),

@@ -3,9 +3,9 @@
 import tempfile
 from pathlib import Path
 
-from code_review_graph.graph import GraphStore
-from code_review_graph.parser import NodeInfo
-from code_review_graph.search import (
+from code_graph.graph import GraphStore
+from code_graph.parser import NodeInfo
+from code_graph.search import (
     detect_query_kind_boost,
     hybrid_search,
     rebuild_fts_index,

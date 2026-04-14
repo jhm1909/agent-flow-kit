@@ -1,6 +1,6 @@
 # Blast-Radius Analysis Reference
 
-> Source: [code-review-graph](https://github.com/tirth8205/code-review-graph) — curated, MCP dependency removed.
+> Source: [code-graph](https://github.com/tirth8205/code-graph) — curated, MCP dependency removed.
 
 ## Core Concept
 

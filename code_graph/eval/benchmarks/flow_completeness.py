@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 def run(repo_path: Path, store, config: dict) -> list[dict]:
     """Run flow completeness benchmark."""
-    from code_review_graph.flows import store_flows, trace_flows
+    from code_graph.flows import store_flows, trace_flows
 
     flows = trace_flows(store)
     count = store_flows(store, flows)

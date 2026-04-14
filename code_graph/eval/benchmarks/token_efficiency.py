@@ -78,7 +78,7 @@ def run(repo_path: Path, store, config: dict) -> list[dict]:
 
         # Graph-based: use get_review_context
         try:
-            from code_review_graph.tools import get_review_context
+            from code_graph.tools import get_review_context
             ctx = get_review_context(
                 changed_files=changed, repo_root=str(repo_path)
             )

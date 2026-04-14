@@ -17,7 +17,7 @@ def run(repo_path: Path, store, config: dict) -> list[dict]:
         expected = sq["expected"]
 
         try:
-            from code_review_graph.search import hybrid_search
+            from code_graph.search import hybrid_search
             search_results = hybrid_search(store, query, limit=20)
         except (ImportError, sqlite3.OperationalError) as exc:
             logger.debug("hybrid_search unavailable, using fallback: %s", exc)

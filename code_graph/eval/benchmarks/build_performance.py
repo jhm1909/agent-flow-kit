@@ -15,7 +15,7 @@ def run(repo_path: Path, store, config: dict) -> list[dict]:
 
     # Time flow detection
     try:
-        from code_review_graph.flows import store_flows, trace_flows
+        from code_graph.flows import store_flows, trace_flows
         t0 = time.perf_counter()
         flows = trace_flows(store)
         store_flows(store, flows)
@@ -26,7 +26,7 @@ def run(repo_path: Path, store, config: dict) -> list[dict]:
 
     # Time community detection
     try:
-        from code_review_graph.communities import detect_communities, store_communities
+        from code_graph.communities import detect_communities, store_communities
         t0 = time.perf_counter()
         comms = detect_communities(store)
         store_communities(store, comms)

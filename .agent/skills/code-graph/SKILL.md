@@ -3,11 +3,11 @@ name: code-graph
 description: >
   Full codebase graph analysis: AST parsing (19 languages), blast-radius tracing, risk scoring,
   hub/bridge detection, execution flow tracing, community detection, refactoring tools.
-  Includes lightweight shell fallbacks and full Python engine (from code-review-graph).
+  Includes lightweight shell fallbacks and full Python engine (from code-graph).
 metadata:
   version: "2.0.0"
   sources:
-    - code-review-graph (full port: parser, graph store, analysis, flows, communities, search)
+    - code-graph (full port: parser, graph store, analysis, flows, communities, search)
 ---
 
 # Code Graph Analysis

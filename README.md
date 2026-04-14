@@ -9,6 +9,10 @@ Lightweight toolkit that gives AI coding assistants two capabilities:
 
 - bash, git, python3 (pre-installed on most dev machines)
 
+**Optional dependencies** (for validation and PNG export):
+- `xmllint` — SVG validation (`brew install libxml2` / `apt install libxml2-utils`)
+- `rsvg-convert` — PNG export (`brew install librsvg` / `apt install librsvg2-bin`)
+
 ## Usage
 
 Clone into your project or copy the `.agent/` directory:
@@ -39,7 +43,7 @@ cp -r agent-flow-kit/scripts/ your-project/scripts/
 Built on techniques from:
 - [antigravity-kit](https://github.com/jhm1909/antigravity-kit) — skill/workflow structure
 - [fireworks-tech-graph](https://github.com/yizhiyanhua-ai/fireworks-tech-graph) — diagram methodology
-- [code-review-graph](https://github.com/tirth8205/code-review-graph) — graph analysis methodology
+- [code-graph](https://github.com/tirth8205/code-graph) — graph analysis methodology
 
 ## License
 

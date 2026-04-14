@@ -58,7 +58,7 @@
 - **Dependency trim**: Removed unused `gitpython` dependency.
 
 ## v1.7.0
-- **`install` command**: New primary entry point for setup (`code-review-graph install`). `init` remains as an alias.
+- **`install` command**: New primary entry point for setup (`code-graph install`). `init` remains as an alias.
 - **`--dry-run` flag**: Preview what `install`/`init` would write without modifying files.
 - **PyPI auto-publish**: GitHub releases now automatically publish to PyPI.
 - **README rewrite**: Professional documentation with real benchmark data from httpx, FastAPI, and Next.js.
@@ -86,19 +86,19 @@
 - **Spaces-in-path handling**: *(superseded in v1.6.4 by `uvx`-based config)* Previously used symlinks for spaces in paths
 - **No git required**: `build`, `status`, `visualize`, `watch` now work on any directory without git
 - **Plugin ready**: Skills registered in plugin.json, SKILL.md frontmatter fixed
-- **File organization**: Generated files moved into `.code-review-graph/` directory (auto-created `.gitignore`, legacy migration)
+- **File organization**: Generated files moved into `.code-graph/` directory (auto-created `.gitignore`, legacy migration)
 - **Visualization density**: Starts collapsed (File nodes only), search bar, clickable edge type toggles, scale-aware layout for large graphs
 - **Project cleanup**: Removed redundant `references/`, `agents/`, `settings.json`
 
 ## v1.4.0
 - **`init` command**: Automatic `.mcp.json` setup for Claude Code integration
-- **Interactive D3.js graph visualization**: `code-review-graph visualize` generates an HTML graph you can explore in-browser
+- **Interactive D3.js graph visualization**: `code-graph visualize` generates an HTML graph you can explore in-browser
 - **Documentation overhaul**: Comprehensive docs audit across all reference files
 
 ## v1.3.0
 - **Python version check with Docker fallback**: Automatically detects Python 3.10+ and suggests Docker if unavailable
-- **Universal install**: `pip install code-review-graph` — no git clone needed
-- **CLI entry point**: `code-review-graph` command available system-wide after pip install
+- **Universal install**: `pip install code-graph` — no git clone needed
+- **CLI entry point**: `code-graph` command available system-wide after pip install
 
 ## v1.2.0
 - **Logging improvements**: Structured logging throughout the codebase
@@ -107,7 +107,7 @@
 - **CI coverage**: GitHub Actions CI/CD pipeline with test coverage reporting
 
 ## v1.1.0
-- **Watch mode**: `code-review-graph watch` — auto-rebuilds graph on file changes
+- **Watch mode**: `code-graph watch` — auto-rebuilds graph on file changes
 - **Vector embeddings**: Optional `pip install .[embeddings]` for semantic code search
 - **Go, Rust, Java verified**: 12+ languages with dedicated test coverage
 - **47 tests passing**, 8 MCP tools registered
@@ -125,6 +125,6 @@
 
 ## Privacy & Data
 - All data stays 100% local
-- Graph stored in `.code-review-graph/graph.db` (SQLite), auto-gitignored
+- Graph stored in `.code-graph/graph.db` (SQLite), auto-gitignored
 - No telemetry, no network calls
-- Respects `.gitignore` and `.code-review-graphignore`
+- Respects `.gitignore` and `.code-graphignore`

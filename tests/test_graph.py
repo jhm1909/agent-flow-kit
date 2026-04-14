@@ -5,8 +5,8 @@ import sqlite3
 import tempfile
 from pathlib import Path
 
-from code_review_graph.graph import GraphStore
-from code_review_graph.parser import EdgeInfo, NodeInfo
+from code_graph.graph import GraphStore
+from code_graph.parser import EdgeInfo, NodeInfo
 
 
 class TestGraphStore:
@@ -235,7 +235,7 @@ class TestGraphStore:
         store = GraphStore.__new__(GraphStore)
         store._conn = conn
 
-        with caplog.at_level(logging.DEBUG, logger="code_review_graph.graph"):
+        with caplog.at_level(logging.DEBUG, logger="code_graph.graph"):
             result = store.get_all_community_ids()
 
         assert result == {}
@@ -248,7 +248,7 @@ class TestGraphStore:
         store = GraphStore.__new__(GraphStore)
         store._conn = conn
 
-        with caplog.at_level(logging.DEBUG, logger="code_review_graph.graph"):
+        with caplog.at_level(logging.DEBUG, logger="code_graph.graph"):
             result = store.get_communities_list()
 
         assert result == []

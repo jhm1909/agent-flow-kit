@@ -2,10 +2,10 @@
 
 ## Project Overview
 
-**code-review-graph** is a persistent, incrementally-updated knowledge graph for token-efficient code reviews with Claude Code. It parses codebases using Tree-sitter, builds a structural graph in SQLite, and exposes it via MCP tools and prompts.
+**code-graph** is a persistent, incrementally-updated knowledge graph for token-efficient code reviews with Claude Code. It parses codebases using Tree-sitter, builds a structural graph in SQLite, and exposes it via MCP tools and prompts.
 
 ## Graph Tool Usage (Token-Efficient)
-When using code-review-graph MCP tools, follow these rules:
+When using code-graph MCP tools, follow these rules:
 1. First call: `get_minimal_context(task="<description>")` — costs ~100 tokens, gives you the full picture.
 2. All subsequent calls: use `detail_level="minimal"` unless you need more.
 3. Prefer `query_graph` with a specific target over broad `list_*` calls.
@@ -14,7 +14,7 @@ When using code-review-graph MCP tools, follow these rules:
 
 ## Architecture
 
-- **Core Package**: `code_review_graph/` (Python 3.10+)
+- **Core Package**: `code_graph/` (Python 3.10+)
   - `parser.py` — Tree-sitter multi-language AST parser (19 languages including Vue SFC, Solidity, Dart, R, Perl, Lua + Jupyter/Databricks notebooks)
   - `graph.py` — SQLite-backed graph store (nodes, edges, BFS impact analysis)
   - `tools.py` — 22 MCP tool implementations
@@ -36,30 +36,30 @@ When using code-review-graph MCP tools, follow these rules:
   - `migrations.py` — Database schema migrations (v1-v5)
   - `tsconfig_resolver.py` — TypeScript path alias resolution
 
-- **VS Code Extension**: `code-review-graph-vscode/` (TypeScript)
+- **VS Code Extension**: `code-graph-vscode/` (TypeScript)
   - Separate subproject with its own `package.json`, `tsconfig.json`
-  - Reads from `.code-review-graph/graph.db` via SQLite
+  - Reads from `.code-graph/graph.db` via SQLite
 
-- **Database**: `.code-review-graph/graph.db` (SQLite, WAL mode)
+- **Database**: `.code-graph/graph.db` (SQLite, WAL mode)
 
 ## Key Commands
 
 ```bash
 # Development
 uv run pytest tests/ --tb=short -q          # Run tests (572 tests)
-uv run ruff check code_review_graph/        # Lint
-uv run mypy code_review_graph/ --ignore-missing-imports --no-strict-optional
+uv run ruff check code_graph/        # Lint
+uv run mypy code_graph/ --ignore-missing-imports --no-strict-optional
 
 # Build & test
-uv run code-review-graph build              # Full graph build
-uv run code-review-graph update             # Incremental update
-uv run code-review-graph status             # Show stats
-uv run code-review-graph serve              # Start MCP server
-uv run code-review-graph wiki               # Generate markdown wiki
-uv run code-review-graph detect-changes     # Risk-scored change analysis
-uv run code-review-graph register <path>    # Register repo in multi-repo registry
-uv run code-review-graph repos              # List registered repos
-uv run code-review-graph eval               # Run evaluation benchmarks
+uv run code-graph build              # Full graph build
+uv run code-graph update             # Incremental update
+uv run code-graph status             # Show stats
+uv run code-graph serve              # Start MCP server
+uv run code-graph wiki               # Generate markdown wiki
+uv run code-graph detect-changes     # Risk-scored change analysis
+uv run code-graph register <path>    # Register repo in multi-repo registry
+uv run code-graph repos              # List registered repos
+uv run code-graph eval               # Run evaluation benchmarks
 ```
 
 ## Code Conventions

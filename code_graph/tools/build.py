@@ -56,7 +56,7 @@ def _run_postprocess(
         warnings.append(f"Signature computation failed: {type(e).__name__}: {e}")
 
     try:
-        from code_review_graph.search import rebuild_fts_index
+        from code_graph.search import rebuild_fts_index
 
         fts_count = rebuild_fts_index(store)
         build_result["fts_indexed"] = fts_count
@@ -73,12 +73,12 @@ def _run_postprocess(
 
     try:
         if use_incremental:
-            from code_review_graph.flows import incremental_trace_flows
+            from code_graph.flows import incremental_trace_flows
 
             count = incremental_trace_flows(store, changed_files)
         else:
-            from code_review_graph.flows import store_flows as _store_flows
-            from code_review_graph.flows import trace_flows as _trace_flows
+            from code_graph.flows import store_flows as _store_flows
+            from code_graph.flows import trace_flows as _trace_flows
 
             flows = _trace_flows(store)
             count = _store_flows(store, flows)
@@ -89,16 +89,16 @@ def _run_postprocess(
 
     try:
         if use_incremental:
-            from code_review_graph.communities import (
+            from code_graph.communities import (
                 incremental_detect_communities,
             )
 
             count = incremental_detect_communities(store, changed_files)
         else:
-            from code_review_graph.communities import (
+            from code_graph.communities import (
                 detect_communities as _detect_communities,
             )
-            from code_review_graph.communities import (
+            from code_graph.communities import (
                 store_communities as _store_communities,
             )
 
@@ -481,7 +481,7 @@ def run_postprocess(
 
         if fts:
             try:
-                from code_review_graph.search import rebuild_fts_index
+                from code_graph.search import rebuild_fts_index
 
                 fts_count = rebuild_fts_index(store)
                 result["fts_indexed"] = fts_count
@@ -491,8 +491,8 @@ def run_postprocess(
 
         if flows:
             try:
-                from code_review_graph.flows import store_flows as _store_flows
-                from code_review_graph.flows import trace_flows as _trace_flows
+                from code_graph.flows import store_flows as _store_flows
+                from code_graph.flows import trace_flows as _trace_flows
 
                 traced = _trace_flows(store)
                 count = _store_flows(store, traced)
@@ -503,10 +503,10 @@ def run_postprocess(
 
         if communities:
             try:
-                from code_review_graph.communities import (
+                from code_graph.communities import (
                     detect_communities as _detect_communities,
                 )
-                from code_review_graph.communities import (
+                from code_graph.communities import (
                     store_communities as _store_communities,
                 )
 

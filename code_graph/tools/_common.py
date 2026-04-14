@@ -62,7 +62,7 @@ def _validate_repo_root(path: Path) -> Path:
     """Validate that a path is a plausible project root.
 
     Ensures the path is an existing directory that contains a ``.git``
-    or ``.code-review-graph`` directory, preventing arbitrary file-system
+    or ``.code-graph`` directory, preventing arbitrary file-system
     traversal via the ``repo_root`` parameter.
     """
     resolved = path.resolve()
@@ -70,10 +70,10 @@ def _validate_repo_root(path: Path) -> Path:
         raise ValueError(
             f"repo_root is not an existing directory: {resolved}"
         )
-    if not (resolved / ".git").exists() and not (resolved / ".code-review-graph").exists():
+    if not (resolved / ".git").exists() and not (resolved / ".code-graph").exists():
         raise ValueError(
             f"repo_root does not look like a project root (no .git or "
-            f".code-review-graph directory found): {resolved}"
+            f".code-graph directory found): {resolved}"
         )
     return resolved
 

@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "code-review-graph"
+name = "code-graph"
 version = "2.3.2"
 description = "Persistent incremental knowledge graph for token-efficient, context-aware code reviews with Claude Code"
 readme = {file = "README.md", content-type = "text/markdown"}
@@ -37,14 +37,14 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://code-review-graph.com"
-Repository = "https://github.com/tirth8205/code-review-graph"
-Documentation = "https://github.com/tirth8205/code-review-graph/blob/main/docs/INDEX.md"
-Changelog = "https://github.com/tirth8205/code-review-graph/blob/main/CHANGELOG.md"
-Issues = "https://github.com/tirth8205/code-review-graph/issues"
+Homepage = "https://code-graph.com"
+Repository = "https://github.com/tirth8205/code-graph"
+Documentation = "https://github.com/tirth8205/code-graph/blob/main/docs/INDEX.md"
+Changelog = "https://github.com/tirth8205/code-graph/blob/main/CHANGELOG.md"
+Issues = "https://github.com/tirth8205/code-graph/issues"
 
 [project.scripts]
-code-review-graph = "code_review_graph.cli:main"
+code-graph = "code_graph.cli:main"
 
 [project.optional-dependencies]
 embeddings = [
@@ -65,10 +65,10 @@ wiki = [
     "ollama>=0.1.0",
 ]
 all = [
-    "code-review-graph[embeddings]",
-    "code-review-graph[communities]",
-    "code-review-graph[eval]",
-    "code-review-graph[wiki]",
+    "code-graph[embeddings]",
+    "code-graph[communities]",
+    "code-graph[eval]",
+    "code-graph[wiki]",
 ]
 dev = [
     "pytest>=8.0,<9",
@@ -79,11 +79,11 @@ dev = [
 ]
 
 [tool.hatch.build.targets.wheel]
-packages = ["code_review_graph"]
+packages = ["code_graph"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "code_review_graph/",
+    "code_graph/",
     "skills/",
     ".claude-plugin/",
     "docs/",
@@ -105,7 +105,7 @@ exclude = [
 select = ["E", "F", "I", "N", "W"]
 
 [tool.ruff.lint.per-file-ignores]
-"code_review_graph/visualization.py" = ["E501"]  # embedded HTML/JS template
+"code_graph/visualization.py" = ["E501"]  # embedded HTML/JS template
 "tests/fixtures/sample_databricks_export.py" = ["F841", "W292"]  # intentional fixture patterns
 "tests/fixtures/sample_notebook.ipynb" = ["F401", "I001"]  # fixture imports: intentionally unused, split across cells
 "tests/test_multilang.py" = ["E501"]  # long assertions with explanatory comments

@@ -1,19 +1,19 @@
-"""CLI entry point for code-review-graph.
+"""CLI entry point for code-graph.
 
 Usage:
-    code-review-graph install
-    code-review-graph init
-    code-review-graph build [--base BASE]
-    code-review-graph update [--base BASE]
-    code-review-graph watch
-    code-review-graph status
-    code-review-graph serve
-    code-review-graph visualize
-    code-review-graph wiki
-    code-review-graph detect-changes [--base BASE] [--brief]
-    code-review-graph register <path> [--alias name]
-    code-review-graph unregister <path_or_alias>
-    code-review-graph repos
+    code-graph install
+    code-graph init
+    code-graph build [--base BASE]
+    code-graph update [--base BASE]
+    code-graph watch
+    code-graph status
+    code-graph serve
+    code-graph visualize
+    code-graph wiki
+    code-graph detect-changes [--base BASE] [--brief]
+    code-graph register <path> [--alias name]
+    code-graph unregister <path_or_alias>
+    code-graph repos
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ import sys
 
 # Python version check — must come before any other imports
 if sys.version_info < (3, 10):
-    print("code-review-graph requires Python 3.10 or higher.")
+    print("code-graph requires Python 3.10 or higher.")
     print(f"  You are running Python {sys.version}")
     print()
     print("Install Python 3.10+: https://www.python.org/downloads/")
@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 def _get_version() -> str:
     """Get the installed package version."""
     try:
-        return pkg_version("code-review-graph")
+        return pkg_version("code-graph")
     except PackageNotFoundError as exc:
         logger.debug("Package metadata unavailable, falling back to 'dev': %s", exc)
         return "dev"
@@ -72,7 +72,7 @@ def _print_banner() -> None:
 
     print(f"""
 {c}  ●──●──●{r}
-{c}  │╲ │ ╱│{r}       {b}code-review-graph{r}  {d}v{version}{r}
+{c}  │╲ │ ╱│{r}       {b}code-graph{r}  {d}v{version}{r}
 {c}  ●──{y}◆{c}──●{r}
 {c}  │╱ │ ╲│{r}       {d}Structural knowledge graph for{r}
 {c}  ●──●──●{r}       {d}smarter code reviews{r}
@@ -94,7 +94,7 @@ def _print_banner() -> None:
     {g}eval{r}        Run evaluation benchmarks
     {g}serve{r}       Start MCP server
 
-  {d}Run{r} {b}code-review-graph <command> --help{r} {d}for details{r}
+  {d}Run{r} {b}code-graph <command> --help{r} {d}for details{r}
 """)
 
 
@@ -186,17 +186,17 @@ def _handle_init(args: argparse.Namespace) -> None:
             print(f"  {t}")
 
     if dry_run:
-        print("\n[dry-run] Would ensure .gitignore ignores .code-review-graph/.")
+        print("\n[dry-run] Would ensure .gitignore ignores .code-graph/.")
         print("[dry-run] No files were modified.")
         return
 
     gitignore_state = ensure_repo_gitignore_excludes_crg(repo_root)
     if gitignore_state == "created":
-        print("Created .gitignore and added .code-review-graph/.")
+        print("Created .gitignore and added .code-graph/.")
     elif gitignore_state == "updated":
-        print("Updated .gitignore with .code-review-graph/.")
+        print("Updated .gitignore with .code-graph/.")
     else:
-        print(".gitignore already contains .code-review-graph/.")
+        print(".gitignore already contains .code-graph/.")
 
     # Skills and hooks are installed by default so Claude actually uses the
     # graph tools proactively.  Use --no-skills / --no-hooks / --no-instructions
@@ -246,14 +246,14 @@ def _handle_init(args: argparse.Namespace) -> None:
 
     print()
     print("Next steps:")
-    print("  1. code-review-graph build    # build the knowledge graph")
+    print("  1. code-graph build    # build the knowledge graph")
     print("  2. Restart your AI coding tool to pick up the new config")
 
 
 def main() -> None:
     """Main CLI entry point."""
     ap = argparse.ArgumentParser(
-        prog="code-review-graph",
+        prog="code-graph",
         description="Persistent incremental knowledge graph for code reviews",
     )
     ap.add_argument(
@@ -455,7 +455,7 @@ def main() -> None:
     args = ap.parse_args()
 
     if args.version:
-        print(f"code-review-graph {_get_version()}")
+        print(f"code-graph {_get_version()}")
         return
 
     if not args.command:
@@ -506,7 +506,7 @@ def main() -> None:
                 output_dir=getattr(args, "output_dir", None),
             )
             print(f"\nCompleted {len(results)} benchmark(s).")
-            print("Run 'code-review-graph eval --report' to generate tables.")
+            print("Run 'code-graph eval --report' to generate tables.")
         return
 
     if args.command in ("init", "install"):
@@ -536,7 +536,7 @@ def main() -> None:
             repos = registry.list_repos()
             if not repos:
                 print("No repositories registered.")
-                print("Use: code-review-graph register <path> [--alias name]")
+                print("Use: code-graph register <path> [--alias name]")
             else:
                 for entry in repos:
                     alias = entry.get("alias", "")
@@ -652,7 +652,7 @@ def main() -> None:
                 print(
                     f"WARNING: Graph was built on '{stored_branch}' "
                     f"but you are now on '{current_branch}'. "
-                    f"Run 'code-review-graph build' to rebuild."
+                    f"Run 'code-graph build' to rebuild."
                 )
 
         elif args.command == "watch":

@@ -4,16 +4,16 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
-from code_review_graph.changes import (
+from code_graph.changes import (
     _parse_unified_diff,
     analyze_changes,
     compute_risk_score,
     map_changes_to_nodes,
     parse_git_diff_ranges,
 )
-from code_review_graph.flows import store_flows, trace_flows
-from code_review_graph.graph import GraphStore
-from code_review_graph.parser import EdgeInfo, NodeInfo
+from code_graph.flows import store_flows, trace_flows
+from code_graph.graph import GraphStore
+from code_graph.parser import EdgeInfo, NodeInfo
 
 
 class TestChanges:
@@ -430,14 +430,14 @@ class TestChanges:
 
     def test_detect_changes_tool_no_changes(self):
         """detect_changes_func returns clean result when no changes detected."""
-        from code_review_graph.tools import detect_changes_func
+        from code_graph.tools import detect_changes_func
 
         # Patch _get_store to use our test store,
         # and get_changed_files/get_staged_and_unstaged to return empty.
         with (
-            patch("code_review_graph.tools.review._get_store") as mock_get_store,
-            patch("code_review_graph.tools.review.get_changed_files", return_value=[]),
-            patch("code_review_graph.tools.review.get_staged_and_unstaged", return_value=[]),
+            patch("code_graph.tools.review._get_store") as mock_get_store,
+            patch("code_graph.tools.review.get_changed_files", return_value=[]),
+            patch("code_graph.tools.review.get_staged_and_unstaged", return_value=[]),
         ):
             mock_get_store.return_value = (self.store, Path("/fake/repo"))
             # Prevent the store from being closed by the tool
@@ -452,15 +452,15 @@ class TestChanges:
 
     def test_detect_changes_tool_with_changes(self):
         """detect_changes_func returns full analysis for changed files."""
-        from code_review_graph.tools import detect_changes_func
+        from code_graph.tools import detect_changes_func
 
         self._add_func("my_func", path="/fake/repo/app.py", line_start=1, line_end=10)
 
         with (
-            patch("code_review_graph.tools.review._get_store") as mock_get_store,
-            patch("code_review_graph.tools.review.get_changed_files", return_value=["app.py"]),
+            patch("code_graph.tools.review._get_store") as mock_get_store,
+            patch("code_graph.tools.review.get_changed_files", return_value=["app.py"]),
             patch(
-                "code_review_graph.tools.review.parse_git_diff_ranges",
+                "code_graph.tools.review.parse_git_diff_ranges",
                 return_value={"app.py": [(1, 10)]},
             ),
         ):

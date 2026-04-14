@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from code_review_graph.parser import CodeParser
+from code_graph.parser import CodeParser
 
 FIXTURES = Path(__file__).parent / "fixtures"
 

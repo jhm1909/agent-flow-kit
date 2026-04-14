@@ -1,6 +1,6 @@
 """Multi-repo registry and connection pool.
 
-Manages a registry of multiple repositories at ``~/.code-review-graph/registry.json``
+Manages a registry of multiple repositories at ``~/.code-graph/registry.json``
 and provides a connection pool for concurrent access to multiple graph databases.
 """
 
@@ -16,15 +16,15 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 # Default registry path
-_REGISTRY_DIR = Path.home() / ".code-review-graph"
+_REGISTRY_DIR = Path.home() / ".code-graph"
 _REGISTRY_PATH = _REGISTRY_DIR / "registry.json"
 
 
 class Registry:
-    """Manages a JSON-based registry of code-review-graph repositories.
+    """Manages a JSON-based registry of code-graph repositories.
 
     Each entry stores the repo path and an optional alias.
-    The registry lives at ``~/.code-review-graph/registry.json``.
+    The registry lives at ``~/.code-graph/registry.json``.
     """
 
     def __init__(self, path: Path | None = None) -> None:
@@ -57,7 +57,7 @@ class Registry:
     def register(self, path: str, alias: str | None = None) -> dict[str, str]:
         """Register a repository path.
 
-        Validates that the path contains a ``.git`` or ``.code-review-graph``
+        Validates that the path contains a ``.git`` or ``.code-graph``
         directory.
 
         Args:
@@ -73,10 +73,10 @@ class Registry:
         resolved = Path(path).resolve()
         if not resolved.is_dir():
             raise ValueError(f"Path is not a directory: {resolved}")
-        if not (resolved / ".git").exists() and not (resolved / ".code-review-graph").exists():
+        if not (resolved / ".git").exists() and not (resolved / ".code-graph").exists():
             raise ValueError(
                 f"Path does not look like a repository "
-                f"(no .git or .code-review-graph): {resolved}"
+                f"(no .git or .code-graph): {resolved}"
             )
 
         with self._lock:

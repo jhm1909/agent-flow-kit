@@ -1,5 +1,5 @@
 name: nextjs
-url: https://github.com/tirth8205/code-review-graph
+url: https://github.com/tirth8205/code-graph
 commit: HEAD
 language: python
 size_category: medium
@@ -13,13 +13,13 @@ test_commits:
     changed_files: 2
 
 entry_points:
-  - "code_review_graph/cli.py::cli"
-  - "code_review_graph/main.py::main"
+  - "code_graph/cli.py::cli"
+  - "code_graph/main.py::main"
 
 search_queries:
   - query: "GraphStore nodes"
-    expected: "code_review_graph/graph.py::GraphStore"
+    expected: "code_graph/graph.py::GraphStore"
   - query: "parse AST"
-    expected: "code_review_graph/parser.py::CodeParser"
+    expected: "code_graph/parser.py::CodeParser"
   - query: "full build"
-    expected: "code_review_graph/incremental.py::full_build"
+    expected: "code_graph/incremental.py::full_build"

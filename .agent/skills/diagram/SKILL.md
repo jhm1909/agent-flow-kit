@@ -18,7 +18,7 @@ Create production-quality SVG diagrams from natural language descriptions.
 
 ```bash
 # Method 1: Template-based (recommended — full features)
-python3 scripts/generate-from-template.py templates/architecture.svg fixtures/mem0-style1.json -o output.svg
+python3 scripts/generate-from-template.py architecture output.svg "$(cat fixtures/mem0-style1.json)"
 
 # Method 2: JSON pipeline (lightweight)
 echo '{"nodes":[...], "edges":[...]}' | python3 scripts/svg-gen.py -o diagram.svg --style flat-icon

@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "code-review-graph build >/dev/null 2>&1 &"
+            "command": "code-graph build >/dev/null 2>&1 &"
           }
         ]
       },
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "code-review-graph update 2>/dev/null || true"
+            "command": "code-graph update 2>/dev/null || true"
           }
         ]
       }

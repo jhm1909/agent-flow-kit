@@ -21,7 +21,7 @@ def list_repos_func() -> dict[str, Any]:
     """List all registered repositories.
 
     [REGISTRY] Returns the list of repositories registered in the global
-    multi-repo registry at ``~/.code-review-graph/registry.json``.
+    multi-repo registry at ``~/.code-graph/registry.json``.
 
     Returns:
         List of registered repos with paths and aliases.
@@ -83,7 +83,7 @@ def cross_repo_search_func(
 
         for repo_entry in repos:
             repo_path = Path(repo_entry["path"])
-            db_path = repo_path / ".code-review-graph" / "graph.db"
+            db_path = repo_path / ".code-graph" / "graph.db"
             if not db_path.exists():
                 continue
 

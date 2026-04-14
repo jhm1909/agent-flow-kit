@@ -5,7 +5,7 @@ import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from code_review_graph.registry import ConnectionPool, Registry, resolve_repo
+from code_graph.registry import ConnectionPool, Registry, resolve_repo
 
 
 class TestRegistry:
@@ -21,7 +21,7 @@ class TestRegistry:
 
         self.repo2 = Path(self.tmp_dir) / "repo2"
         self.repo2.mkdir()
-        (self.repo2 / ".code-review-graph").mkdir()
+        (self.repo2 / ".code-graph").mkdir()
 
     def teardown_method(self):
         import shutil
@@ -54,7 +54,7 @@ class TestRegistry:
             self.registry.register("/nonexistent/path/repo")
 
     def test_register_not_a_repo(self):
-        """Registering a dir without .git or .code-review-graph raises ValueError."""
+        """Registering a dir without .git or .code-graph raises ValueError."""
         import pytest
         bare_dir = Path(self.tmp_dir) / "bare"
         bare_dir.mkdir()
@@ -223,11 +223,11 @@ class TestConnectionPool:
 class TestCrossRepoSearch:
     def test_cross_repo_search_no_repos(self):
         """cross_repo_search with empty registry returns empty results."""
-        from code_review_graph.tools import cross_repo_search_func
+        from code_graph.tools import cross_repo_search_func
 
         tmp_dir = tempfile.mkdtemp()
 
-        with patch("code_review_graph.registry.Registry") as mock_registry_cls:
+        with patch("code_graph.registry.Registry") as mock_registry_cls:
             mock_instance = MagicMock()
             mock_instance.list_repos.return_value = []
             mock_registry_cls.return_value = mock_instance

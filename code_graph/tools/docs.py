@@ -20,7 +20,7 @@ def embed_graph(
 ) -> dict[str, Any]:
     """Compute vector embeddings for all graph nodes to enable semantic search.
 
-    Requires: ``pip install code-review-graph[embeddings]``
+    Requires: ``pip install code-graph[embeddings]``
     Default model: all-MiniLM-L6-v2. Override via ``model`` param or
     CRG_EMBEDDING_MODEL env var.
     Changing the model re-embeds all nodes automatically.
@@ -45,7 +45,7 @@ def embed_graph(
                 "status": "error",
                 "error": (
                     "sentence-transformers is not installed. "
-                    "Install with: pip install code-review-graph[embeddings]"
+                    "Install with: pip install code-graph[embeddings]"
                 ),
             }
 
@@ -157,7 +157,7 @@ def generate_wiki_func(
     """Generate a markdown wiki from the community structure.
 
     [DOCS] Creates a wiki page for each detected community and an index
-    page. Pages are written to ``.code-review-graph/wiki/`` inside the
+    page. Pages are written to ``.code-graph/wiki/`` inside the
     repository. Only regenerates pages whose content has changed unless
     force=True.
 

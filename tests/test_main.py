@@ -13,7 +13,7 @@ import inspect
 
 import pytest
 
-from code_review_graph import main as crg_main
+from code_graph import main as crg_main
 
 
 class TestResolveRepoRoot:
