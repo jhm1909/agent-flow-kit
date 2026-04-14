@@ -41,10 +41,10 @@ python -m code_graph watch
 
 ```bash
 # Blast-radius via grep (fast, approximate)
-./scripts/blast-radius.sh [files...]
+./.agent/scripts/blast-radius.sh [files...]
 
 # Hub detection via import counting
-./scripts/hub-detect.sh [directory]
+./.agent/scripts/hub-detect.sh [directory]
 ```
 
 ## Decision Tree
@@ -56,7 +56,7 @@ SITUATION?
 │  │  ├─ Yes → python -m code_graph detect-changes
 │  │  │  ├─ Returns: risk-scored nodes, affected flows, test gaps
 │  │  │  └─ Follow risk level → review strategy (see below)
-│  │  └─ No → ./scripts/blast-radius.sh
+│  │  └─ No → ./.agent/scripts/blast-radius.sh
 │  └─ Check test coverage → flag gaps
 ├─ Understanding architecture
 │  ├─ python -m code_graph status → overview stats

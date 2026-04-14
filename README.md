@@ -20,7 +20,7 @@ Clone into your project or copy the `.agent/` directory:
 ```bash
 git clone https://github.com/jhm1909/agent-flow-kit.git
 cp -r agent-flow-kit/.agent/ your-project/.agent/
-cp -r agent-flow-kit/scripts/ your-project/scripts/
+cp -r agent-flow-kit/.agent/ your-project/.agent/
 ```
 
 ## Skills

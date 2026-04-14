@@ -18,16 +18,16 @@ Create production-quality SVG diagrams from natural language descriptions.
 
 ```bash
 # Method 1: Template-based (recommended — full features)
-python3 scripts/generate-from-template.py architecture output.svg "$(cat fixtures/mem0-style1.json)"
+python3 .agent/scripts/generate-from-template.py architecture output.svg "$(cat .agent/skills/diagram/fixtures/mem0-style1.json)"
 
 # Method 2: JSON pipeline (lightweight)
-echo '{"nodes":[...], "edges":[...]}' | python3 scripts/svg-gen.py -o diagram.svg --style flat-icon
+echo '{"nodes":[...], "edges":[...]}' | python3 .agent/scripts/svg-gen.py -o diagram.svg --style flat-icon
 
 # Validate
-./scripts/validate-svg.sh output.svg
+./.agent/scripts/validate-svg.sh output.svg
 
 # Test all styles
-./scripts/test-all-styles.sh
+./.agent/scripts/test-all-styles.sh
 ```
 
 ## Decision Tree
@@ -49,9 +49,9 @@ USER REQUEST?
 │  │     ├─ "agent"/"LLM"/"AI" → claude-official (Style 6)
 │  │     └─ default → flat-icon (Style 1)
 │  │     └─ Confirm: "Using [style] because [reason]. OK?"
-│  ├─ Build JSON fixture (see fixtures/ for examples)
+│  ├─ Build JSON fixture (see .agent/skills/diagram/fixtures/ for examples)
 │  ├─ Generate SVG
-│  ├─ Validate: ./scripts/validate-svg.sh output.svg
+│  ├─ Validate: ./.agent/scripts/validate-svg.sh output.svg
 │  └─ Deliver
 ├─ Fix/modify existing diagram
 │  ├─ Edit JSON fixture → re-generate
@@ -127,7 +127,7 @@ USER REQUEST?
 
 ## JSON Fixture Format (Full-Featured)
 
-See `fixtures/` for complete examples. Structure:
+See `.agent/skills/diagram/fixtures/` for complete examples. Structure:
 
 ```json
 {

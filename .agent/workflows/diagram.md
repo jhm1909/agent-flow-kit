@@ -36,8 +36,8 @@ description: Generate production-quality diagrams from text descriptions. Auto-d
 
 1. Build JSON input with nodes, edges, containers, and layers.
 2. Choose generator based on complexity:
-   - **Complex** (containers, ports, routing) → `python3 scripts/generate-from-template.py <template-type> output.svg '<json>'`
-   - **Simple** (just nodes + edges) → `python3 scripts/svg-gen.py -i input.json -o output.svg --style <style>`
+   - **Complex** (containers, ports, routing) → `python3 .agent/scripts/generate-from-template.py <template-type> output.svg '<json>'`
+   - **Simple** (just nodes + edges) → `python3 .agent/scripts/svg-gen.py -i input.json -o output.svg --style <style>`
 3. Check exit code — 0 = success.
 
 ---
@@ -46,7 +46,7 @@ description: Generate production-quality diagrams from text descriptions. Auto-d
 
 // turbo
 
-1. Run: `./scripts/validate-svg.sh output.svg`
+1. Run: `./.agent/scripts/validate-svg.sh output.svg`
 2. If valid → deliver file path to user.
 3. If invalid:
    - First failure → analyze error, fix JSON, regenerate.

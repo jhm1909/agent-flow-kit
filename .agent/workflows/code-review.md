@@ -18,7 +18,7 @@ description: Analyze changed files using blast-radius tracing and risk scoring f
 
 // turbo
 
-1. Run: `./scripts/blast-radius.sh <changed files>`
+1. Run: `./.agent/scripts/blast-radius.sh <changed files>`
 2. Capture output: callers, dependents, tests, risk level.
 3. If blast-radius > 50 files → warn user: "Large scope, review may be incomplete."
 

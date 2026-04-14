@@ -127,7 +127,7 @@ echo -e "${YELLOW}This script provides validation and export only${NC}"
 if [ -f "$SVG_FILE" ]; then
     if [ "$VALIDATE" = true ]; then
         echo -e "\n${BLUE}Validating SVG...${NC}"
-        if "${SKILL_DIR}/scripts/validate-svg.sh" "$SVG_FILE"; then
+        if "${SKILL_DIR}/.agent/scripts/validate-svg.sh" "$SVG_FILE"; then
             echo -e "${GREEN}Validation passed${NC}"
         else
             echo -e "${RED}Validation failed${NC}"

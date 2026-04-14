@@ -4,7 +4,8 @@ set -euo pipefail
 # hub-detect.sh — finds most-connected files (hubs) and bridge nodes in a codebase
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TARGET_DIR="${1:-$(dirname "$SCRIPT_DIR")}"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+TARGET_DIR="${1:-$PROJECT_ROOT}"
 
 echo "=== HUB DETECTION: $TARGET_DIR ==="
 echo ""

@@ -8,7 +8,7 @@ description: Auto-generate architecture diagram from codebase analysis. Combines
 
 // turbo
 
-1. Run: `./scripts/hub-detect.sh`
+1. Run: `./.agent/scripts/hub-detect.sh`
 2. Capture: top hubs, bridge nodes, directory structure.
 3. If no source files found → inform user, stop.
 
@@ -31,7 +31,7 @@ description: Auto-generate architecture diagram from codebase analysis. Combines
 // turbo
 
 1. Select style: `blueprint` (default for architecture diagrams).
-2. Run: `python3 scripts/svg-gen.py -i arch.json -o architecture.svg --style blueprint`
+2. Run: `python3 .agent/scripts/svg-gen.py -i arch.json -o architecture.svg --style blueprint`
 3. Validate output.
 
 ---

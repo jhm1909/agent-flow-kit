@@ -33,7 +33,7 @@ TOTAL=0
 PASSED=0
 FAILED=0
 
-FIXTURES_DIR="${SKILL_DIR}/fixtures"
+FIXTURES_DIR="${SKILL_DIR}/.agent/skills/diagram/fixtures"
 
 echo -e "${BLUE}Testing all styles...${NC}"
 echo "----------------------------------------"
@@ -98,8 +98,8 @@ PY
         echo -n "  Rendering $BASENAME... "
         TOTAL=$((TOTAL + 1))
 
-        if python3 "${SKILL_DIR}/scripts/generate-from-template.py" "$TEMPLATE_TYPE" "$SVG_FILE" "$(cat "$FIXTURE")" > /dev/null 2>&1 \
-            && "${SKILL_DIR}/scripts/validate-svg.sh" "$SVG_FILE" > /dev/null 2>&1; then
+        if python3 "${SKILL_DIR}/.agent/scripts/generate-from-template.py" "$TEMPLATE_TYPE" "$SVG_FILE" "$(cat "$FIXTURE")" > /dev/null 2>&1 \
+            && "${SKILL_DIR}/.agent/scripts/validate-svg.sh" "$SVG_FILE" > /dev/null 2>&1; then
             if command -v rsvg-convert &> /dev/null \
                 && rsvg-convert -w 1920 "$SVG_FILE" -o "$PNG_FILE" 2>/dev/null; then
                 PNG_SIZE=$(du -h "$PNG_FILE" | cut -f1)
@@ -112,7 +112,7 @@ PY
             echo -e "${RED}✗ Fail${NC}"
             FAILED=$((FAILED + 1))
             if [ -f "$SVG_FILE" ]; then
-                "${SKILL_DIR}/scripts/validate-svg.sh" "$SVG_FILE" 2>&1 | grep -E "✗|Error" | sed 's/^/    /' || true
+                "${SKILL_DIR}/.agent/scripts/validate-svg.sh" "$SVG_FILE" 2>&1 | grep -E "✗|Error" | sed 's/^/    /' || true
             fi
         fi
     done
