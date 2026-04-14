@@ -16,10 +16,15 @@ Analyze codebase structure and change impact through import graph analysis.
 
 ## Available scripts
 
-Run with `--help` or no arguments to see usage:
+Run with `--help` to see full usage:
 
 - `scripts/blast-radius.sh` — Trace callers, dependents, and tests for changed files. Outputs risk classification (CRITICAL/HIGH/MEDIUM/LOW).
 - `scripts/hub-detect.sh` — Find most-imported files (hubs) and cross-directory connectors (bridges).
+
+Both scripts support `--json` flag for structured output. Use `--json` when:
+- Piping output to the diagram skill (`hub-detect.sh --json | python3 skills/diagram/scripts/svg-gen.py ...`)
+- Parsing results programmatically
+- Feeding data into the `/visualize-code` workflow
 
 ## How to use it
 

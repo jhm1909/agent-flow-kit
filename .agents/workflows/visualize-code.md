@@ -6,47 +6,33 @@ description: Auto-generates architecture diagram from codebase analysis. Combine
 
 ---
 
-## Step 1: Analyze Structure
+## Step 1: Analyze & Generate JSON
 
 // turbo
 
-1. **Invoke `[code-graph]` skill** — run hub detection:
+1. **Invoke `[code-graph]` skill** — run hub detection with JSON output:
    ```bash
-   bash scripts/hub-detect.sh
+   bash skills/code-graph/scripts/hub-detect.sh --json > arch-data.json
    ```
-2. Capture: top hubs, bridge nodes, directory structure.
-3. If no source files found → inform user and stop.
+2. If output shows `"total_files": 0` → inform user and stop.
+3. Review the JSON: check node count, hub/bridge distribution.
 
 ---
 
-## Step 2: Build Graph Data
+## Step 2: Generate Diagram
 
 // turbo
 
-1. **Invoke `[code-graph]` skill** to interpret the hub-detect output:
-   - Identify top hub files (most imported)
-   - Identify bridge files (cross-directory connectors)
-   - Group files by directory into natural layers
-2. **Invoke `[diagram]` skill** — read `references/tech-diagram.md` to map:
-   - Each hub/bridge → a node (shape based on role: `cylinder` for data, `hexagon` for orchestrators, `rect` for modules)
-   - Import relationships → edges (`primary` for direct, `async` for cross-directory)
-3. Build JSON with title: "Architecture: <project name>"
-
----
-
-## Step 3: Generate Diagram
-
-// turbo
-
-1. **Invoke `[diagram]` skill** — generate architecture diagram:
+1. **Invoke `[diagram]` skill** — pipe JSON directly to SVG generator:
    ```bash
-   echo '<json>' | python3 scripts/svg-gen.py -o architecture.svg --style blueprint
+   cat arch-data.json | python3 skills/diagram/scripts/svg-gen.py -o architecture.svg --style blueprint
    ```
    Default style: `blueprint` (best for architecture diagrams per `style-diagram-matrix.md`).
 2. Validate:
    ```bash
-   bash scripts/validate-svg.sh architecture.svg
+   bash skills/diagram/scripts/validate-svg.sh architecture.svg
    ```
+3. If the auto-generated diagram needs refinement, edit `arch-data.json` (add labels, adjust layers) and regenerate.
 
 ---
 
@@ -64,7 +50,6 @@ description: Auto-generates architecture diagram from codebase analysis. Combine
 
 | Step | Skill                | Output                    |
 |------|----------------------|---------------------------|
-| 1    | code-graph           | Hubs + bridges + dirs     |
-| 2    | code-graph + diagram | JSON graph data           |
-| 3    | diagram              | Architecture SVG          |
-| 4    | —                    | Summary + next steps      |
+| 1    | code-graph           | arch-data.json (auto-generated) |
+| 2    | diagram              | architecture.svg          |
+| 3    | —                    | Summary + next steps      |
