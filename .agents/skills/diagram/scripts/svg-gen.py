@@ -12,6 +12,7 @@ import argparse
 import json
 import io
 import math
+import os
 import sys
 import xml.etree.ElementTree as ET
 from typing import Any
@@ -570,6 +571,15 @@ def main(argv: list[str] | None = None) -> int:
         print("Warning: svg-gen.py ignores 'containers'. For container/swim-lane support, use generate-from-template.py instead.", file=sys.stderr)
     if any("x" in n and "y" in n for n in data.get("nodes", [])):
         print("Warning: svg-gen.py ignores absolute x/y positions. It uses auto-layout based on 'layer' field.", file=sys.stderr)
+
+    # Prevent writing inside .agents/ — redirect to project root
+    abs_out = os.path.abspath(args.output)
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    skill_dir = os.path.abspath(os.path.join(script_dir, ".."))
+    if abs_out.startswith(skill_dir):
+        project_root = os.path.abspath(os.path.join(script_dir, "..", "..", "..", ".."))
+        args.output = os.path.join(project_root, os.path.basename(args.output))
+        print(f"Note: Redirected output to project root: {args.output}", file=sys.stderr)
 
     # Generate SVG
     try:

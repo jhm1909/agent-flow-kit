@@ -1540,6 +1540,14 @@ def main() -> None:
     template_type = sys.argv[1]
     output_path = sys.argv[2]
 
+    # Prevent writing inside .agents/ — redirect to project root
+    abs_out = os.path.abspath(output_path)
+    if os.sep + ".agents" + os.sep in abs_out or abs_out.startswith(os.path.abspath(os.path.join(SCRIPT_DIR, ".."))):
+        # Resolve relative to project root (3 levels up from scripts/)
+        project_root = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", "..", ".."))
+        output_path = os.path.join(project_root, os.path.basename(output_path))
+        print(f"Note: Redirected output to project root: {output_path}", file=sys.stderr)
+
     try:
         # Priority: -i/--input flag > argv[3] > stdin
         if len(sys.argv) > 3 and sys.argv[3] in ("-i", "--input"):
