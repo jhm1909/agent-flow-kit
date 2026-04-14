@@ -1527,32 +1527,41 @@ def build_svg(template_type: str, data: Dict[str, object]) -> str:
     return "\n".join(line for line in lines if line)
 
 
-def _resolve_output_path(output_path: str) -> str:
-    """Redirect output to .agents-output/diagram/svg/ if inside .agents/."""
+def _resolve_output_path(output_path: str, output_dir: str | None = None) -> str:
+    """Resolve output path. Uses --output-dir if given, else .agents-output/diagram/svg/."""
     project_root = os.path.abspath(os.path.join(SCRIPT_DIR, "..", "..", "..", ".."))
     abs_out = os.path.abspath(output_path)
     agents_dir = os.path.join(project_root, ".agents")
-    if abs_out.startswith(agents_dir) or not os.path.isabs(output_path):
+
+    if os.path.isabs(output_path) and not abs_out.startswith(agents_dir):
+        os.makedirs(os.path.dirname(abs_out) or ".", exist_ok=True)
+        return output_path
+
+    if output_dir:
+        out_dir = os.path.join(project_root, output_dir)
+    else:
         out_dir = os.path.join(project_root, ".agents-output", "diagram", "svg")
-        os.makedirs(out_dir, exist_ok=True)
-        output_path = os.path.join(out_dir, os.path.basename(output_path))
-        print(f"Output: {output_path}", file=sys.stderr)
-    return output_path
+
+    os.makedirs(out_dir, exist_ok=True)
+    resolved = os.path.join(out_dir, os.path.basename(output_path))
+    print(f"Output: {resolved}", file=sys.stderr)
+    return resolved
 
 
 def main() -> None:
     import argparse as _ap
     parser = _ap.ArgumentParser(
         description="Generate SVG diagrams from JSON + templates",
-        usage="python3 generate-from-template.py <type> <output> [-i FILE | '<json>' | stdin]",
+        usage="python3 generate-from-template.py <type> <output> [-i FILE] [--output-dir DIR]",
     )
     parser.add_argument("template_type", help="Diagram type (architecture, flowchart, sequence, etc.)")
-    parser.add_argument("output", help="Output SVG path")
+    parser.add_argument("output", help="Output SVG filename")
     parser.add_argument("-i", "--input", dest="input_file", help="JSON input file (recommended on Windows)")
+    parser.add_argument("--output-dir", help="Output directory relative to project root")
     parser.add_argument("json_arg", nargs="?", help="JSON string (Unix only)")
     args = parser.parse_args()
 
-    output_path = _resolve_output_path(args.output)
+    output_path = _resolve_output_path(args.output, args.output_dir)
 
     try:
         if args.input_file:

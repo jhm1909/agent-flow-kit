@@ -500,18 +500,28 @@ def validate_svg(svg_content: str) -> bool:
 # Output path resolution
 # ---------------------------------------------------------------------------
 
-def _resolve_output(output_path: str) -> str:
-    """Redirect output to .agents-output/diagram/svg/ if inside .agents/."""
+def _resolve_output(output_path: str, output_dir: str | None = None) -> str:
+    """Resolve output path. Uses --output-dir if given, else .agents-output/diagram/svg/."""
     script_dir = os.path.dirname(os.path.abspath(__file__))
     project_root = os.path.abspath(os.path.join(script_dir, "..", "..", "..", ".."))
     abs_out = os.path.abspath(output_path)
     agents_dir = os.path.join(project_root, ".agents")
-    if abs_out.startswith(agents_dir) or not os.path.isabs(output_path):
+
+    # If absolute path outside .agents/ — respect it
+    if os.path.isabs(output_path) and not abs_out.startswith(agents_dir):
+        os.makedirs(os.path.dirname(abs_out) or ".", exist_ok=True)
+        return output_path
+
+    # Use explicit --output-dir or default to .agents-output/diagram/svg/
+    if output_dir:
+        out_dir = os.path.join(project_root, output_dir)
+    else:
         out_dir = os.path.join(project_root, ".agents-output", "diagram", "svg")
-        os.makedirs(out_dir, exist_ok=True)
-        output_path = os.path.join(out_dir, os.path.basename(output_path))
-        print(f"Output: {output_path}", file=sys.stderr)
-    return output_path
+
+    os.makedirs(out_dir, exist_ok=True)
+    resolved = os.path.join(out_dir, os.path.basename(output_path))
+    print(f"Output: {resolved}", file=sys.stderr)
+    return resolved
 
 
 # ---------------------------------------------------------------------------
@@ -545,6 +555,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--validate-only",
         action="store_true",
         help="Validate an existing SVG file and exit (no generation)",
+    )
+    parser.add_argument(
+        "--output-dir",
+        metavar="DIR",
+        help="Output directory relative to project root (e.g. .agents-output/visualize/svg)",
     )
     return parser.parse_args(argv)
 
@@ -590,8 +605,8 @@ def main(argv: list[str] | None = None) -> int:
     if any("x" in n and "y" in n for n in data.get("nodes", [])):
         print("Warning: svg-gen.py ignores absolute x/y positions. It uses auto-layout based on 'layer' field.", file=sys.stderr)
 
-    # Redirect output to .agents-output/diagram/svg/ (never inside .agents/)
-    args.output = _resolve_output(args.output)
+    # Redirect output (respects --output-dir if given)
+    args.output = _resolve_output(args.output, args.output_dir)
 
     # Generate SVG
     try:

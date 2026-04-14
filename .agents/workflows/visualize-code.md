@@ -28,8 +28,7 @@ description: Auto-generates architecture diagram from codebase analysis. Combine
 
 1. **Invoke `[diagram]` skill** — pipe JSON directly to SVG generator:
    ```bash
-   mkdir -p .agents-output/visualize/svg
-   cat .agents-output/visualize/tmp/arch-data.json | python3 skills/diagram/scripts/svg-gen.py -o .agents-output/visualize/svg/architecture.svg --style blueprint
+   cat .agents-output/visualize/tmp/arch-data.json | python3 skills/diagram/scripts/svg-gen.py -o architecture.svg --style blueprint --output-dir .agents-output/visualize/svg
    ```
    Default style: `blueprint` (best for architecture diagrams per `style-diagram-matrix.md`).
 2. Validate:
