@@ -2,10 +2,15 @@
 Layout engine bridge — converts JSON diagram data to positioned nodes/edges
 using the vendored Sugiyama (grandalf) algorithm.
 
+Features:
+- Sugiyama hierarchical layout (no overlap guaranteed)
+- Container/compound graph support (swim lanes)
+- Orthogonal edge routing (L-shaped paths avoiding obstacles)
+- Auto node width based on label length
+
 Usage:
     from layout.engine import compute_layout
     positioned = compute_layout(diagram_json)
-    # Returns: {"nodes": [...with x,y...], "edges": [...with route points...], "width": N, "height": N}
 """
 from __future__ import annotations
 
@@ -14,7 +19,7 @@ from typing import Any
 
 from .graphs import Graph, Vertex, Edge
 from .layouts import SugiyamaLayout, VertexViewer
-from .routing import EdgeViewer, route_with_lines
+from .routing import EdgeViewer
 
 
 # ---------------------------------------------------------------------------
@@ -23,45 +28,245 @@ from .routing import EdgeViewer, route_with_lines
 
 DEFAULT_NODE_W = 140
 DEFAULT_NODE_H = 56
-CHAR_WIDTH = 7.5  # approximate px per character at 13px font
+CHAR_WIDTH = 7.5       # approximate px per character at 13px font
 MIN_NODE_W = 80
 MAX_NODE_W = 300
-H_SPACE = 80   # horizontal gap between nodes (spec: 80px)
-V_SPACE = 120  # vertical gap between layers (spec: 120px)
-MARGIN = 40    # canvas margin (spec: 40px)
+H_SPACE = 80           # horizontal gap between nodes (spec: 80px)
+V_SPACE = 120          # vertical gap between layers (spec: 120px)
+MARGIN = 40            # canvas margin (spec: 40px)
+CONTAINER_PAD = 24     # padding inside container around its contents
+CONTAINER_HEADER = 32  # height reserved for container label
+ROUTE_CLEARANCE = 20   # minimum clearance from node edge for routing
 
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 def _estimate_text_width(label: str, font_size: float = 13) -> float:
-    """Estimate text width based on character count and font size."""
     return len(label) * CHAR_WIDTH * (font_size / 13)
 
 
 def _auto_node_width(label: str) -> int:
-    """Calculate appropriate node width for a label."""
     text_w = _estimate_text_width(label)
-    padding = 24  # 12px each side
+    padding = 24
     w = max(MIN_NODE_W, min(MAX_NODE_W, int(text_w + padding)))
-    # Snap to 8px grid
     return ((w + 7) // 8) * 8
 
 
 def _snap(v: float, grid: int = 8) -> int:
-    """Snap value to grid."""
     return round(v / grid) * grid
 
 
 # ---------------------------------------------------------------------------
-# Container layout (compound graph support)
+# Orthogonal edge routing
 # ---------------------------------------------------------------------------
 
-def _layout_container_contents(container_nodes: list[dict], container_edges: list[dict]) -> dict:
-    """Layout nodes inside a container as a sub-graph, return bounding box."""
-    if not container_nodes:
-        return {"width": 0, "height": 0, "nodes": []}
+def _route_orthogonal(
+    x1: float, y1: float, x2: float, y2: float,
+    node_bounds: list[tuple[float, float, float, float]],
+) -> list[tuple[int, int]]:
+    """
+    Route an edge from (x1,y1) to (x2,y2) using orthogonal (L-shaped) segments.
+    Avoids crossing through node bounding boxes.
 
-    result = _layout_flat(container_nodes, container_edges)
+    Returns list of (x,y) waypoints including start and end.
+    """
+    points = []
+    sx, sy = _snap(x1), _snap(y1)
+    ex, ey = _snap(x2), _snap(y2)
+
+    if abs(sx - ex) < 4:
+        # Vertically aligned — straight line
+        return [(sx, sy), (ex, ey)]
+
+    # Try simple L-route: down then across then down
+    mid_y = _snap((sy + ey) / 2)
+
+    # Check if midpoint horizontal segment hits any node
+    collision = False
+    for bx, by, bw, bh in node_bounds:
+        # Horizontal segment at mid_y from sx to ex
+        if by <= mid_y <= by + bh:
+            seg_left = min(sx, ex) - ROUTE_CLEARANCE
+            seg_right = max(sx, ex) + ROUTE_CLEARANCE
+            if bx < seg_right and bx + bw > seg_left:
+                collision = True
+                break
+
+    if not collision:
+        # Simple L-route works
+        points = [
+            (sx, sy),
+            (sx, mid_y),
+            (ex, mid_y),
+            (ex, ey),
+        ]
+    else:
+        # Route around: go wider
+        all_rights = [bx + bw for bx, _, bw, _ in node_bounds]
+        detour_x = _snap(max(all_rights) + ROUTE_CLEARANCE * 2) if all_rights else ex + 60
+
+        points = [
+            (sx, sy),
+            (sx, mid_y),
+            (detour_x, mid_y),
+            (detour_x, ey),
+            (ex, ey),
+        ]
+
+    # Simplify: remove redundant colinear points
+    return _simplify_route(points)
+
+
+def _simplify_route(points: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    """Remove colinear intermediate points."""
+    if len(points) <= 2:
+        return points
+
+    result = [points[0]]
+    for i in range(1, len(points) - 1):
+        px, py = points[i - 1]
+        cx, cy = points[i]
+        nx, ny = points[i + 1]
+        # Keep point if direction changes
+        if not ((px == cx == nx) or (py == cy == ny)):
+            result.append(points[i])
+    result.append(points[-1])
     return result
 
+
+# ---------------------------------------------------------------------------
+# Container / compound graph layout
+# ---------------------------------------------------------------------------
+
+def _group_by_container(
+    nodes: list[dict], containers: list[dict]
+) -> dict[str | None, list[dict]]:
+    """
+    Group nodes by their container. Nodes with 'container' field go into
+    that group. Nodes without go into None group (top level).
+    """
+    groups: dict[str | None, list[dict]] = {None: []}
+    for c in containers:
+        cid = c.get("id", c.get("label", f"container-{id(c)}"))
+        groups[cid] = []
+
+    for n in nodes:
+        cid = n.get("container")
+        if cid and cid in groups:
+            groups[cid].append(n)
+        else:
+            groups[None].append(n)
+
+    return groups
+
+
+def _layout_with_containers(
+    nodes: list[dict], edges: list[dict], containers: list[dict]
+) -> dict:
+    """
+    Layout with container support using collapse-and-expand:
+    1. Layout each container's contents as a sub-graph
+    2. Replace each container with a single super-node (sized to its contents)
+    3. Layout the top-level graph
+    4. Expand containers back and offset their contents
+    """
+    if not containers:
+        return _layout_flat(nodes, edges)
+
+    groups = _group_by_container(nodes, containers)
+    container_map: dict[str, dict] = {}
+
+    # Step 1: layout each container's contents
+    for c in containers:
+        cid = c.get("id", c.get("label", ""))
+        group_nodes = groups.get(cid, [])
+        if not group_nodes:
+            container_map[cid] = {"width": 160, "height": 80, "nodes": [], "container": c}
+            continue
+
+        # Get edges internal to this container
+        node_ids = {n["id"] for n in group_nodes}
+        internal_edges = [
+            e for e in edges
+            if e.get("from", e.get("source", "")) in node_ids
+            and e.get("to", e.get("target", "")) in node_ids
+        ]
+
+        sub_result = _layout_flat(group_nodes, internal_edges)
+        container_map[cid] = {
+            "width": sub_result["width"] + CONTAINER_PAD * 2,
+            "height": sub_result["height"] + CONTAINER_PAD * 2 + CONTAINER_HEADER,
+            "nodes": sub_result["nodes"],
+            "container": c,
+        }
+
+    # Step 2: create super-nodes for each container + keep top-level nodes
+    super_nodes = list(groups.get(None, []))
+    for cid, cdata in container_map.items():
+        super_nodes.append({
+            "id": f"__container__{cid}",
+            "label": cdata["container"].get("label", cid),
+            "width": cdata["width"],
+            "height": cdata["height"],
+        })
+
+    # Get edges between top-level nodes and containers
+    container_node_ids = set()
+    for cid, cdata in container_map.items():
+        for n in cdata["nodes"]:
+            container_node_ids.add(n["id"])
+
+    top_edges = [
+        e for e in edges
+        if e.get("from", e.get("source", "")) not in container_node_ids
+        or e.get("to", e.get("target", "")) not in container_node_ids
+    ]
+
+    # Step 3: layout top-level graph
+    top_result = _layout_flat(super_nodes, top_edges)
+
+    # Step 4: expand containers — offset internal nodes
+    all_nodes = []
+    positioned_containers = []
+
+    for n in top_result["nodes"]:
+        nid = n["id"]
+        if nid.startswith("__container__"):
+            cid = nid[len("__container__"):]
+            cdata = container_map[cid]
+            cx, cy = n["x"], n["y"]
+
+            # Container bounds
+            positioned_containers.append({
+                **cdata["container"],
+                "x": cx,
+                "y": cy,
+                "width": n["width"],
+                "height": n["height"],
+            })
+
+            # Offset internal nodes
+            for inner in cdata["nodes"]:
+                inner["x"] += cx + CONTAINER_PAD
+                inner["y"] += cy + CONTAINER_PAD + CONTAINER_HEADER
+                all_nodes.append(inner)
+        else:
+            all_nodes.append(n)
+
+    return {
+        "nodes": all_nodes,
+        "edges": top_result["edges"],
+        "containers": positioned_containers,
+        "width": top_result["width"],
+        "height": top_result["height"],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Core flat layout (no containers)
+# ---------------------------------------------------------------------------
 
 def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
     """
@@ -106,7 +311,7 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
         sug.init_all()
         sug.draw()
 
-    # Read positions back and normalize (shift so min_x, min_y start at MARGIN)
+    # Read positions back and normalize
     min_x = float("inf")
     min_y = float("inf")
     max_x = float("-inf")
@@ -117,7 +322,6 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
             continue
         cx, cy = v.view.xy
         w, h = v.view.w, v.view.h
-        # grandalf gives center coordinates — convert to top-left
         x = cx - w / 2
         y = cy - h / 2
         min_x = min(min_x, x)
@@ -125,11 +329,13 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
         max_x = max(max_x, x + w)
         max_y = max(max_y, y + h)
 
-    # Normalize: shift everything so top-left is at MARGIN
     offset_x = MARGIN - min_x if min_x != float("inf") else 0
     offset_y = MARGIN - min_y if min_y != float("inf") else 0
 
+    # Position nodes
     positioned_nodes = []
+    node_bounds_list = []
+
     for nid, v in vertex_map.items():
         if v.view.xy is None:
             continue
@@ -138,14 +344,15 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
         x = _snap(cx - w / 2 + offset_x)
         y = _snap(cy - h / 2 + offset_y)
 
-        node_data = dict(v.data)  # copy original
+        node_data = dict(v.data)
         node_data["x"] = x
         node_data["y"] = y
         node_data["width"] = w
         node_data["height"] = h
         positioned_nodes.append(node_data)
+        node_bounds_list.append((x, y, w, h))
 
-    # Edge routing: compute connection points
+    # Route edges orthogonally
     positioned_edges = []
     for eo in edge_objects:
         src_v = eo.v[0]
@@ -158,14 +365,16 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
         sw, sh = src_v.view.w, src_v.view.h
         dw, dh = dst_v.view.w, dst_v.view.h
 
-        # Source bottom center, target top center (hierarchical)
-        x1 = _snap(sx + offset_x)
-        y1 = _snap(sy + sh / 2 + offset_y)
-        x2 = _snap(dx + offset_x)
-        y2 = _snap(dy - dh / 2 + offset_y)
+        # Source bottom center → target top center
+        x1 = sx + offset_x
+        y1 = sy + sh / 2 + offset_y
+        x2 = dx + offset_x
+        y2 = dy - dh / 2 + offset_y
+
+        route = _route_orthogonal(x1, y1, x2, y2, node_bounds_list)
 
         edge_data = dict(eo.data) if eo.data else {}
-        edge_data["_route"] = [(x1, y1), (x2, y2)]
+        edge_data["_route"] = route
         positioned_edges.append(edge_data)
 
     canvas_w = _snap(max_x + offset_x + MARGIN) if max_x != float("-inf") else 960
@@ -190,7 +399,10 @@ def compute_layout(data: dict[str, Any]) -> dict[str, Any]:
     Input: {"nodes": [...], "edges": [...], "title": "...", "containers": [...]}
     Output: same structure but nodes have x, y, width, height; edges have _route points
 
-    If nodes already have x,y (absolute positioning), they are kept as-is.
+    Handles:
+    - Flat graphs (nodes + edges)
+    - Compound graphs (nodes + edges + containers)
+    - Already-positioned nodes (pass through)
     """
     nodes = data.get("nodes", [])
     edges = data.get("edges", data.get("arrows", []))
@@ -200,16 +412,20 @@ def compute_layout(data: dict[str, Any]) -> dict[str, Any]:
     has_positions = all("x" in n and "y" in n for n in nodes) if nodes else False
 
     if has_positions:
-        # Already positioned — just pass through
         return data
 
-    # No positions → compute layout
-    result = _layout_flat(nodes, edges)
+    # Compute layout
+    if containers:
+        result = _layout_with_containers(nodes, edges, containers)
+    else:
+        result = _layout_flat(nodes, edges)
 
     # Rebuild output
     output = dict(data)
     output["nodes"] = result["nodes"]
     output["edges"] = result["edges"]
+    if "containers" in result:
+        output["containers"] = result["containers"]
     output["_canvas_width"] = result["width"]
     output["_canvas_height"] = result["height"]
 
