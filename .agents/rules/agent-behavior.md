@@ -1,38 +1,31 @@
 ---
-description: Guardrails for all agent-flow-kit skills and workflows.
+type: always
 ---
 
-# Agent Behavior Rules
+# Agent Flow Kit Rules
 
-These rules apply to ALL skills and workflows in this toolkit.
+These constraints apply to all skills and workflows in this toolkit.
 
-## 1. Validate Before Deliver
+## Validate before delivering
 
-- SVG output MUST pass XML validation before claiming success.
-- Scripts MUST exit 0 before using their output.
-- Never deliver unvalidated output without explicit warning.
+- SVG output must pass validation before claiming success.
+- Scripts must exit 0 before using their output.
+- Never deliver unvalidated output without warning the user.
 
-## 2. Confirm Before Assume
+## Confirm before assuming
 
-- Style not specified → auto-detect + ask user to confirm.
-- Blast-radius > 50 files → warn: "Large scope, review may be incomplete."
-- Ambiguous diagram type → ask, don't guess.
+- If the user didn't specify a diagram style, auto-detect and ask to confirm.
+- If blast-radius exceeds 50 files, warn that the review may be incomplete.
+- If the diagram type is ambiguous, ask instead of guessing.
 
-## 3. Token-Efficient
+## Fail gracefully
 
-- Code-graph: read ONLY files within blast-radius, not entire codebase.
-- Diagram: build JSON first, render second — makes debugging possible.
-- Review: stop reading when risk is understood, don't read LOW-priority files unnecessarily.
-
-## 4. Fail Gracefully
-
-- SVG validation fails once → analyze error, fix, retry.
-- SVG validation fails twice → STOP. Show raw SVG. Ask user.
-- Script fails → show stderr output. Suggest fix. Don't retry blindly.
+- If SVG validation fails once, analyze the error and retry.
+- If it fails twice, stop and show the raw SVG to the user.
+- If a script fails, show the error output and suggest a fix. Don't retry blindly.
 - Never silently swallow errors.
 
-## 5. Keep It Simple
+## Keep output concise
 
-- Zero external dependencies — bash, git, python3 only.
-- No orphan temp files — clean up after yourself.
-- Output = file path + one-line summary. No walls of text.
+- Deliver file paths and one-line summaries, not walls of text.
+- Clean up temporary files after use.

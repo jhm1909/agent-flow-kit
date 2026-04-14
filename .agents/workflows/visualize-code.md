@@ -1,45 +1,34 @@
----
-description: Auto-generate architecture diagram from codebase analysis. Combines code-graph and diagram skills.
----
+# Visualize Codebase
 
-# Visualize Code Workflow
+Auto-generate an architecture diagram from codebase analysis. Combines code-graph analysis with diagram generation.
 
-## Step 1: Analyze Structure
+## Steps
 
-// turbo
+1. Run hub detection to understand the codebase structure:
+   ```bash
+   bash skills/code-graph/scripts/hub-detect.sh
+   ```
+   If no source files are found, inform the user and stop.
 
-1. Run: `skills/code-graph/scripts/hub-detect.sh`
-2. Capture: top hubs, bridge nodes, directory structure.
-3. If no source files found → inform user, stop.
+2. From the output, identify:
+   - Top hub files (most imported)
+   - Bridge files (cross-directory connectors)
+   - Directory groupings (natural layers)
 
----
+3. Convert the analysis into a diagram JSON:
+   - Each hub/bridge becomes a node (shape based on role)
+   - Import relationships become edges
+   - Group by directory into layers
+   - Title: "Architecture: <project name>"
 
-## Step 2: Build Graph Data
+4. Generate the architecture diagram:
+   ```bash
+   echo '<json>' | python3 skills/diagram/scripts/svg-gen.py -o architecture.svg --style blueprint
+   ```
 
-// turbo
+5. Validate and deliver:
+   ```bash
+   bash skills/diagram/scripts/validate-svg.sh architecture.svg
+   ```
 
-1. Convert hub-detect output to diagram JSON:
-   - Each hub/bridge → a node (shape based on role: `database` for data files, `agent` for orchestrators, `rect` for modules).
-   - Import relationships → edges (type: `primary` for direct, `async` for cross-directory).
-   - Group by directory → layers.
-2. Add title: "Architecture: <project name>"
-
----
-
-## Step 3: Generate Diagram
-
-// turbo
-
-1. Select style: `blueprint` (default for architecture diagrams).
-2. Run: `python3 skills/diagram/scripts/svg-gen.py -i arch.json -o architecture.svg --style blueprint`
-3. Validate output.
-
----
-
-## Step 4: Deliver
-
-// turbo
-
-1. Present architecture diagram file path.
-2. Summarize: "Found N hubs, M bridges across K directories."
-3. Ask user: "Want to dive deeper into any module?"
+6. Summarize: "Found N hubs, M bridges across K directories." Ask if the user wants to explore any module deeper.

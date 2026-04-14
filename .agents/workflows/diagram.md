@@ -1,53 +1,34 @@
----
-description: Generate production-quality diagrams from text descriptions. Auto-detects style when not specified.
----
+# Create Diagram
 
-# Diagram Workflow
+Generate a production-quality SVG diagram from a text description.
 
-## Step 1: Classify & Extract
+## Steps
 
-// turbo
+1. Ask the user what they want to visualize. Identify the diagram type (architecture, flowchart, sequence, agent system, ER, etc.).
 
-1. **Read skill**: `skills/diagram/SKILL.md`
-2. Classify diagram type from user description.
-3. Extract nodes, edges, and layers.
-4. Map concepts to semantic shapes (LLM → `llm`, Agent → `agent`, DB → `database`).
+2. Ask about visual style preference. If none specified, auto-detect:
+   - Documentation → flat-icon
+   - GitHub/dark theme → dark-terminal
+   - Engineering → blueprint
+   - AI/agent topic → claude-official
+   - Confirm your choice with the user before proceeding.
 
----
+3. Build a JSON structure describing nodes, edges, and containers. Use examples from `skills/diagram/resources/` as reference for the JSON format.
 
-## Step 2: Select Style
+4. Generate the SVG using the diagram skill's scripts:
+   ```bash
+   # For complex diagrams with containers and routing
+   python3 skills/diagram/scripts/generate-from-template.py <type> output.svg '<json>'
 
-// turbo
+   # For simple node-and-edge diagrams
+   echo '<json>' | python3 skills/diagram/scripts/svg-gen.py -o output.svg --style <style>
+   ```
 
-1. If user specified a style → use it.
-2. If not → auto-detect:
-   - README/docs context → `flat-icon`
-   - `.github/` or dark theme → `dark-terminal`
-   - "architecture"/"infra" keywords → `blueprint`
-   - "agent"/"LLM"/"AI" keywords → `claude-official`
-   - Default → `flat-icon`
-3. **Confirm with user**: "Using [style] because [reason]. OK?"
+5. Validate the output:
+   ```bash
+   bash skills/diagram/scripts/validate-svg.sh output.svg
+   ```
 
----
+6. If validation fails, fix the JSON and regenerate. If it fails twice, show the raw SVG and ask the user for guidance.
 
-## Step 3: Generate
-
-// turbo
-
-1. Build JSON input with nodes, edges, containers, and layers.
-2. Choose generator based on complexity:
-   - **Complex** (containers, ports, routing) → `python3 skills/diagram/scripts/generate-from-template.py <template-type> output.svg '<json>'`
-   - **Simple** (just nodes + edges) → `python3 skills/diagram/scripts/svg-gen.py -i input.json -o output.svg --style <style>`
-3. Check exit code — 0 = success.
-
----
-
-## Step 4: Validate & Deliver
-
-// turbo
-
-1. Run: `skills/diagram/scripts/validate-svg.sh output.svg`
-2. If valid → deliver file path to user.
-3. If invalid:
-   - First failure → analyze error, fix JSON, regenerate.
-   - Second failure → stop, show raw SVG, ask user for guidance.
+7. Deliver the file path to the user.

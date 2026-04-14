@@ -1,49 +1,28 @@
----
-description: Analyze changed files using blast-radius tracing and risk scoring for focused code review.
----
+# Review Code Changes
 
-# Code Review Workflow
+Analyze recent code changes using blast-radius tracing and risk scoring.
 
-## Step 1: Identify Changes
+## Steps
 
-// turbo
+1. Identify the changed files:
+   ```bash
+   git diff --name-only HEAD~1..HEAD
+   ```
+   If no changes found, inform the user and stop.
 
-1. Run: `git diff --name-only HEAD~1..HEAD` (or user-specified range).
-2. If no changes → inform user, stop.
-3. List changed files for context.
+2. Run blast-radius analysis:
+   ```bash
+   bash skills/code-graph/scripts/blast-radius.sh
+   ```
 
----
+3. Read the risk assessment from the output. Follow the review strategy based on risk level:
+   - **CRITICAL/HIGH**: Read all files in the blast radius.
+   - **MEDIUM**: Read changed files and direct callers.
+   - **LOW**: Read changed files only.
 
-## Step 2: Blast-Radius Analysis
+4. For each file reviewed, check for:
+   - Security-sensitive code changes (auth, validation, access control)
+   - Breaking changes to public APIs
+   - Missing test coverage for changed functions
 
-// turbo
-
-1. Run: `skills/code-graph/scripts/blast-radius.sh <changed files>`
-2. Capture output: callers, dependents, tests, risk level.
-3. If blast-radius > 50 files → warn user: "Large scope, review may be incomplete."
-
----
-
-## Step 3: Focused Review
-
-// turbo
-
-1. Read files in priority order based on risk level:
-   - **CRITICAL/HIGH**: All files in blast radius.
-   - **MEDIUM**: Changed files + direct callers.
-   - **LOW**: Changed files only.
-2. Check for:
-   - Security patterns removed (auth, validation, access control).
-   - Breaking changes to public APIs.
-   - Missing test coverage for changed code.
-3. **Read skill**: `skills/code-graph/SKILL.md` for methodology.
-
----
-
-## Step 4: Report
-
-// turbo
-
-1. Present findings with evidence (file:line references).
-2. Classify each finding: CRITICAL / HIGH / MEDIUM / LOW.
-3. Suggest specific fixes where applicable.
+5. Present findings with file:line references. Classify each issue as CRITICAL, HIGH, MEDIUM, or LOW. Suggest specific fixes where applicable.
