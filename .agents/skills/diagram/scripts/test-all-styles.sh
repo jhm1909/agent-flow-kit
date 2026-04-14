@@ -13,7 +13,8 @@ NC='\033[0m'
 
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REFS_DIR="${SKILL_DIR}/references"
-TEST_DIR="${SKILL_DIR}/test-output"
+# Output OUTSIDE .agents/ — go to system temp
+TEST_DIR="${TMPDIR:-/tmp}/agent-flow-kit-test-${USER:-test}"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 
 echo -e "${BLUE}=== Fireworks Tech Graph - Batch Test ===${NC}"
