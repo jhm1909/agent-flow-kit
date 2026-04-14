@@ -1,7 +1,7 @@
 # Features
 
 ## v2.2.1 (Current)
-- **24 MCP tools** (up from 22): Added `get_minimal_context` and `run_postprocess`.
+- **24 tools** (up from 22): Added `get_minimal_context` and `run_postprocess`.
 - **Parallel parsing**: `ProcessPoolExecutor` for 3-5x faster builds on large repos.
 - **Lazy post-processing**: `postprocess="full"|"minimal"|"none"` to skip expensive steps.
 - **SQLite-native BFS**: Recursive CTE replaces NetworkX for impact analysis (faster on large graphs).
@@ -16,8 +16,8 @@
 - **615 tests** across 22 test files.
 
 ## v2.1.0
-- **22 MCP tools** (up from 9): 13 new tools for flows, communities, architecture, refactoring, wiki, multi-repo, and risk-scored change detection.
-- **5 MCP prompts**: `review_changes`, `architecture_map`, `debug_issue`, `onboard_developer`, `pre_merge_check` workflow templates.
+- **22 tools** (up from 9): 13 new tools for flows, communities, architecture, refactoring, wiki, multi-repo, and risk-scored change detection.
+- **5 workflow prompts**: `review_changes`, `architecture_map`, `debug_issue`, `onboard_developer`, `pre_merge_check` workflow templates.
 - **18 languages** (up from 15): Added Dart, R, Perl support.
 - **Execution flows**: Trace call chains from entry points (HTTP handlers, CLI commands, tests), sorted by criticality score.
 - **Community detection**: Cluster related code entities via Leiden algorithm (igraph) or file-based grouping.
@@ -37,7 +37,7 @@
 - **Multi-word AND search**: `search_nodes` now requires all words to match (case-insensitive), producing more precise results.
 - **Call target resolution**: Bare call targets are resolved to qualified names using same-file definitions, improving `callers_of`/`callees_of` accuracy.
 - **Impact radius pagination**: `get_impact_radius` returns `truncated` flag and `total_impacted` count; `max_results` parameter controls output size.
-- **`find_large_functions_tool`**: New MCP tool to find functions, classes, or files exceeding a line-count threshold.
+- **`find_large_functions_tool`**: New tool to find functions, classes, or files exceeding a line-count threshold.
 - **15 languages**: Added Vue SFC and Solidity support.
 - **Documentation overhaul**: All docs updated with accurate language/tool counts, version references, and VS Code extension parity.
 
@@ -64,7 +64,7 @@
 - **README rewrite**: Professional documentation with real benchmark data from httpx, FastAPI, and Next.js.
 
 ## v1.6.4
-- **Portable MCP config**: `init` now generates `uvx`-based `.mcp.json` — no absolute paths, works on any machine with `uv` installed
+- **Portable config**: `init` now generates `uvx`-based `.mcp.json` — no absolute paths, works on any machine with `uv` installed
 - **Removed symlink workaround**: The `_safe_path` helper for spaces-in-paths is no longer needed with `uvx`
 
 ## v1.6.3
@@ -103,14 +103,14 @@
 ## v1.2.0
 - **Logging improvements**: Structured logging throughout the codebase
 - **Watch debounce**: Smarter file-change detection in watch mode
-- **tools.py fixes**: Bug fixes and reliability improvements for MCP tools
+- **tools.py fixes**: Bug fixes and reliability improvements for tools
 - **CI coverage**: GitHub Actions CI/CD pipeline with test coverage reporting
 
 ## v1.1.0
 - **Watch mode**: `code-graph watch` — auto-rebuilds graph on file changes
 - **Vector embeddings**: Optional `pip install .[embeddings]` for semantic code search
 - **Go, Rust, Java verified**: 12+ languages with dedicated test coverage
-- **47 tests passing**, 8 MCP tools registered
+- **47 tests passing**, 8 tools registered
 - README badges and cleaner install flow
 
 ## v1.0.0 (Foundation)
@@ -118,10 +118,10 @@
 - **Tree-sitter multi-language parsing** — classes, functions, imports, calls, inheritance
 - **Incremental updates** via `git diff` + automatic dependency cascade
 - **Impact-radius / blast-radius analysis** — BFS through call/import/inheritance graph
-- **6 MCP tools** for full graph interaction
+- **6 tools** for full graph interaction
 - **3 review-first skills**: build-graph, review-delta, review-pr
 - **PostToolUse hooks** (Write|Edit|Bash) for automatic background updates
-- **FastMCP 3.0 compatible** stdio tool server
+- **Compatible** stdio tool server
 
 ## Privacy & Data
 - All data stays 100% local

@@ -10,7 +10,7 @@ code-graph install    # auto-detects and configures all supported platforms
 code-graph build      # parse your codebase
 ```
 
-`install` detects which AI coding tools you have and writes the correct MCP configuration for each one. Restart your editor/tool after installing.
+`install` detects which AI coding tools you have and writes the correct configuration for each one. Restart your editor/tool after installing.
 
 To target a specific platform instead of auto-detecting all:
 
