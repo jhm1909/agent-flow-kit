@@ -100,6 +100,7 @@ EDGE_TYPES: dict[str, dict[str, Any]] = {
 
 GRID = 8
 LAYER_V_SPACING = 120
+H_SPACE = 80
 MARGIN = 40
 DEFAULT_W = 140
 DEFAULT_H = 56
@@ -114,35 +115,45 @@ def snap(v: float) -> int:
     return int(round(v / GRID) * GRID)
 
 
-def compute_layout(nodes: list[dict]) -> dict[str, dict[str, int]]:
+def compute_layout(nodes: list[dict], edges: list[dict] | None = None) -> dict[str, dict[str, int]]:
     """
-    Assign (x, y, w, h) to every node using the `layer` field.
-    Nodes in the same layer are centred horizontally with even spacing.
+    Assign (x, y, w, h) to every node using Sugiyama hierarchical layout.
+    Uses vendored grandalf engine for proper overlap-free positioning.
     Returns a mapping of node id -> {x, y, w, h}.
     """
-    # Group nodes by layer
+    try:
+        from layout.engine import compute_layout as _engine_layout
+        data = {"nodes": nodes, "edges": edges or []}
+        result = _engine_layout(data)
+        positions: dict[str, dict[str, int]] = {}
+        for n in result.get("nodes", []):
+            positions[n["id"]] = {"x": n["x"], "y": n["y"], "w": n["width"], "h": n["height"]}
+        canvas_w = result.get("_canvas_width", 960)
+        return positions, canvas_w
+    except ImportError:
+        pass
+
+    # Fallback: simple layer-based layout (if grandalf not available)
     layers: dict[int, list[dict]] = {}
     for n in nodes:
         layer = int(n.get("layer", 0))
         layers.setdefault(layer, []).append(n)
 
-    # Determine canvas width: widest layer
     max_row_width = 0
     for layer_nodes in layers.values():
         row_w = sum(int(n.get("width", DEFAULT_W)) for n in layer_nodes)
-        h_gap = 24 * (len(layer_nodes) - 1)
+        h_gap = H_SPACE * (len(layer_nodes) - 1)
         max_row_width = max(max_row_width, row_w + h_gap)
 
     canvas_w = max_row_width + 2 * MARGIN
-
-    positions: dict[str, dict[str, int]] = {}
+    positions = {}
 
     for layer_idx in sorted(layers.keys()):
         layer_nodes = layers[layer_idx]
         y_top = snap(MARGIN + layer_idx * LAYER_V_SPACING)
 
         row_total_w = sum(int(n.get("width", DEFAULT_W)) for n in layer_nodes)
-        h_gaps = 24 * (len(layer_nodes) - 1)
+        h_gaps = H_SPACE * (len(layer_nodes) - 1)
         start_x = snap((canvas_w - row_total_w - h_gaps) / 2)
 
         cur_x = start_x
@@ -150,7 +161,7 @@ def compute_layout(nodes: list[dict]) -> dict[str, dict[str, int]]:
             w = snap(int(n.get("width", DEFAULT_W)))
             h = snap(int(n.get("height", DEFAULT_H)))
             positions[n["id"]] = {"x": cur_x, "y": y_top, "w": w, "h": h}
-            cur_x = snap(cur_x + w + 24)
+            cur_x = snap(cur_x + w + H_SPACE)
 
     return positions, canvas_w
 
@@ -425,7 +436,7 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
     if not nodes:
         raise ValueError("No nodes provided in input JSON.")
 
-    positions, canvas_w = compute_layout(nodes)
+    positions, canvas_w = compute_layout(nodes, edges)
 
     # Canvas height: max layer + height of tallest node in that layer + margin
     max_y = max(p["y"] + p["h"] for p in positions.values())
