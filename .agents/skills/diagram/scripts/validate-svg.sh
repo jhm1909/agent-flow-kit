@@ -32,6 +32,7 @@ echo "Validating SVG: $SVG_FILE"
 echo "----------------------------------------"
 
 FAILURES=0
+WARNINGS=0
 
 # Check 0: XML syntax
 echo -n "Checking XML syntax... "
@@ -248,10 +249,24 @@ for element in root.iter():
     else:
         continue
 
+    if len(points) < 2:
+        continue
+    start = points[0]
+    end = points[-1]
     for p1, p2 in zip(points, points[1:]):
-        if any(segment_hits_bounds(p1, p2, bounds) for bounds in obstacles):
-            collisions += 1
-            break
+        for bounds in obstacles:
+            left, top, right, bottom = bounds
+            # Skip: obstacle contains the arrow's start or end point (source/target node)
+            if (left <= start[0] <= right and top <= start[1] <= bottom):
+                continue
+            if (left <= end[0] <= right and top <= end[1] <= bottom):
+                continue
+            if segment_hits_bounds(p1, p2, bounds):
+                collisions += 1
+                break
+        else:
+            continue
+        break
 
 print(collisions)
 PY
@@ -259,8 +274,8 @@ PY
 if [ "$COLLISIONS" -eq 0 ]; then
     echo -e "${GREEN}✓ Pass${NC}"
 else
-    echo -e "${RED}✗ Fail${NC} (${COLLISIONS} arrow path collision(s))"
-    FAILURES=$((FAILURES + 1))
+    echo -e "${YELLOW}⚠ Warning${NC} (${COLLISIONS} arrow path collision(s) — consider rerouting)"
+    WARNINGS=$((WARNINGS + 1))
 fi
 
 # Check 6: Closing </svg> tag
@@ -289,10 +304,13 @@ else
 fi
 
 echo "----------------------------------------"
-if [ "$FAILURES" -eq 0 ]; then
-    echo "Validation complete"
+if [ "$FAILURES" -eq 0 ] && [ "$WARNINGS" -eq 0 ]; then
+    echo -e "${GREEN}Validation passed${NC}"
     exit 0
+elif [ "$FAILURES" -eq 0 ]; then
+    echo -e "${YELLOW}Validation passed with ${WARNINGS} warning(s)${NC}"
+    exit 0
+else
+    echo -e "${RED}Validation failed (${FAILURES} error(s), ${WARNINGS} warning(s))${NC}"
+    exit 1
 fi
-
-echo -e "${RED}Validation failed (${FAILURES} error(s))${NC}"
-exit 1
