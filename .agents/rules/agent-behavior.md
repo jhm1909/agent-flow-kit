@@ -6,6 +6,16 @@ type: always
 
 These constraints apply to ALL skills and workflows in this toolkit.
 
+## Match the user's language
+
+Detect the language of the user's message and respond in that **same language**. This applies to ALL agent output: clarifying questions, multiple-choice options, progress updates, error messages, and final delivery summaries.
+
+- User writes in Vietnamese → respond in Vietnamese
+- User writes in English → respond in English
+- User writes in Japanese → respond in Japanese
+- Mixed languages → use the dominant language of the message
+- Code, file paths, CLI commands, and technical terms (e.g., "flowchart", "architecture", "SVG") stay in English regardless of response language
+
 ## Think before acting
 
 - **Classify first**: identify the diagram type or review scope BEFORE generating anything.
