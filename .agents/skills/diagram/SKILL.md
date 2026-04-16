@@ -72,23 +72,51 @@ Purpose:    ✅ or ❌ — [reason]
 - **All ✅** → proceed to Step 1
 - **Any ❌** → you MUST ask the user. **STOP HERE. Do not proceed.**
 
-Combine all ❌ items into **ONE message**. Example:
+Combine all ❌ items into **ONE message** with **multiple-choice options** for each gap.
 
-> "To create a quality diagram, I need a bit more info:
-> 1. **Diagram type**: architecture, flowchart, or sequence?
-> 2. **Components**: which specific services/components should be included?
-> 3. **Purpose**: is this for docs, slides, or a README?"
+### How to ask — multiple-choice format
 
-### Rules:
-- Ask **at most ONE round** of questions
-- After user responds, if still partially missing → fill reasonable defaults and **state your assumptions explicitly** for user to confirm
+For each missing dimension, provide **concrete options (A/B/C/D)** based on context clues from the user's request. Always include a free-form option so the user can specify something different.
+
+**Example** — user says "draw a diagram of authentication":
+
+> I need a bit more info to create a quality diagram:
+>
+> **1. Diagram type:**
+> - A) Architecture — show how auth components connect
+> - B) Flowchart — show the step-by-step login/signup process
+> - C) Sequence — show message flow between client, server, and identity provider
+> - D) Something else (please describe)
+>
+> **2. Key components** — which ones should be in the diagram?
+> - A) Basic: User → Login Form → Auth Server → Database
+> - B) OAuth: User → App → OAuth Provider → Token → API
+> - C) Full stack: Client → API Gateway → Auth Service → JWT → Session Store → Database
+> - D) Custom (please list your components)
+>
+> **3. Purpose:**
+> - A) Technical docs / README
+> - B) Presentation / slides
+> - C) Internal team reference
+> - D) Other
+>
+> Pick a letter for each, or describe your own. You can mix — e.g., "1B, 2C, 3A".
+
+### Rules for crafting options:
+- **Options MUST be context-aware** — infer from the user's topic, not generic. If user says "payment system", suggest payment-related components, not auth components.
+- **Option A** = simplest/most common interpretation
+- **Option B** = moderate complexity
+- **Option C** = most detailed/comprehensive
+- **Option D** = always "Something else / Custom" for free-form input
+- User can **mix and modify**: "1B, but add Redis for session caching"
+- After user picks, if minor gaps remain → state assumptions and proceed (no second round of questions)
 - **Style** is the ONLY dimension you may auto-detect without asking
 
 ### What counts as "sufficient" — be strict:
-- ❌ "draw a diagram of authentication" → Subject vague, no components, no type
-- ❌ "diagram for my system" → Everything missing
-- ❌ "draw backend architecture" → Has type, but no components named
-- ✅ "draw a login flowchart: user enters credentials → validate → check 2FA → OTP → success" → All clear
+- ❌ "draw a diagram of authentication" → no type, no components, no purpose → ASK with options
+- ❌ "diagram for my system" → everything missing → ASK with options
+- ❌ "draw backend architecture" → has type, but no components named → ASK with options
+- ✅ "draw a login flowchart: user enters credentials → validate → check 2FA → OTP → success" → all clear, proceed
 
 ---
 

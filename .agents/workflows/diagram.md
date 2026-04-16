@@ -33,23 +33,45 @@ Purpose:    ✅ or ❌ — [what user said or didn't say]
 | **Components** | ≥3 specific named nodes/services | 0-2 components or only generic terms |
 | **Purpose** | User stated audience/use | No context |
 
-### If ANY dimension is ❌ → STOP. Ask ONE combined question. Do NOT proceed.
+### If ANY dimension is ❌ → STOP. Ask ONE combined question with multiple-choice options. Do NOT proceed.
 
-Example:
-> "To create a quality diagram, I need a bit more info:
-> 1. **Diagram type**: architecture, flowchart, or sequence?
-> 2. **Components**: which specific services/components should be included?
-> 3. **Purpose**: is this for docs, slides, or a README?"
+For each missing dimension, provide **concrete options (A/B/C/D)** based on context clues from the user's request. Always include a free-form option (D).
+
+**Example** — user says "draw a diagram of authentication":
+
+> I need a bit more info to create a quality diagram:
+>
+> **1. Diagram type:**
+> - A) Architecture — show how auth components connect
+> - B) Flowchart — show the step-by-step login/signup process
+> - C) Sequence — show message flow between client, server, and identity provider
+> - D) Something else (please describe)
+>
+> **2. Key components:**
+> - A) Basic: User → Login Form → Auth Server → Database
+> - B) OAuth: User → App → OAuth Provider → Token → API
+> - C) Full stack: Client → API Gateway → Auth Service → JWT → Session Store → Database
+> - D) Custom (please list your components)
+>
+> **3. Purpose:**
+> - A) Technical docs / README
+> - B) Presentation / slides
+> - C) Internal team reference
+> - D) Other
+>
+> Pick a letter for each, or describe your own — e.g., "1B, 2C, 3A".
 
 ### Rules:
-- **ONE round** of questions max
-- After user responds, if partially missing → state assumptions explicitly, ask user to confirm
+- **Options MUST be context-aware** — tailor to the user's topic, not generic
+- **A** = simplest, **B** = moderate, **C** = most detailed, **D** = custom/free-form
+- User can mix and modify: "1B, but add Redis for caching"
+- **ONE round** of questions max — after user picks, proceed
 - **Style** is the ONLY thing you may auto-detect
 
 ### Examples — be strict:
-- ❌ "draw a diagram of authentication" → no type, no components, no purpose
-- ❌ "draw backend architecture" → no components named
-- ✅ "draw a login flowchart: user enters credentials → validate → check 2FA → OTP → success" → all clear
+- ❌ "draw a diagram of authentication" → no type, no components, no purpose → ASK with options
+- ❌ "draw backend architecture" → no components named → ASK with options
+- ✅ "draw a login flowchart: user enters credentials → validate → 2FA → OTP → success" → all clear, proceed
 
 **WAIT** for user response before proceeding.
 
