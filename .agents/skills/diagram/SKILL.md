@@ -19,6 +19,7 @@ Generate production-quality SVG diagrams from natural language descriptions.
 - Need to show system architecture, data flow, agent pipelines, or process flows
 - Converting text descriptions into technical diagrams for docs, slides, or READMEs
 - User describes a system and wants a visual representation
+- **Code → Flowchart**: If user provides a code snippet and wants a flowchart, use the [code-to-flowchart](../../workflows/code-to-flowchart.md) workflow instead — it handles control flow tracing and shape mapping automatically
 
 ## Mandatory Workflow (Always Follow This Order)
 
@@ -127,7 +128,7 @@ Match user description to the closest type:
 |---|---|
 | Microservices, API gateways, layers of services | **Architecture** |
 | Data transformations, queries, embeddings, ETL | **Data Flow** |
-| Steps, decisions, if/then, sequential processes | **Flowchart** |
+| Steps, decisions, if/then, sequential processes | **Flowchart** (→ [code-to-flowchart](../../workflows/code-to-flowchart.md) if from code) |
 | LLM reasoning, tools, memory, agent loops | **Agent Architecture** |
 | Memory tiers, retrieval, storage (Mem0, MemGPT) | **Memory Architecture** |
 | Time-ordered messages, API calls between systems | **Sequence** |
