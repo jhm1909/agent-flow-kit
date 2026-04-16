@@ -28,6 +28,8 @@ from .routing import EdgeViewer
 
 DEFAULT_NODE_W = 140
 DEFAULT_NODE_H = 56
+LINE_H = 18            # height per line of text
+PAD_Y = 20             # vertical padding inside node
 CHAR_W_LATIN = 7.5     # approximate px per Latin character at 13px font
 CHAR_W_CJK = 13.0      # CJK (Korean, Chinese, Japanese) chars are ~1.7x wider
 MIN_NODE_W = 80
@@ -311,7 +313,11 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
         label = n.get("label", nid)
         shape = n.get("shape", n.get("kind", "rect"))
         w = n.get("width") or _auto_node_width(label, shape)
-        h = n.get("height") or DEFAULT_NODE_H
+        # Auto-height from multiline labels
+        lines = label.split("\n") if label else [""]
+        auto_h = max(DEFAULT_NODE_H, len(lines) * LINE_H + PAD_Y)
+        auto_h = ((auto_h + 7) // 8) * 8  # snap to 8px grid
+        h = n.get("height") or auto_h
 
         v = Vertex(data=n)
         v.view = VertexViewer(w=int(w), h=int(h))
