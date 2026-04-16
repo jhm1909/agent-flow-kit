@@ -8,41 +8,48 @@ description: Orchestrates diagram generation from text description to validated 
 
 ---
 
-## Step 0: Evaluate Request Completeness
+## Step 0: Evaluate Request Completeness (HARD GATE)
 
 // turbo
 
-Before doing any work, score the user's request against these 4 dimensions:
+⛔ **MANDATORY. Do NOT skip. Do NOT jump to classification or JSON generation.**
 
-| Dimension | Sufficient | Insufficient (must ask) |
-|-----------|-----------|------------------------|
-| **Subject** | Clear topic with named components ("RAG pipeline with Pinecone and GPT-4") | Vague topic ("draw a diagram", "visualize authentication") |
-| **Type** | Explicit or unambiguously inferable ("flowchart of login process") | Ambiguous — could be multiple types ("diagram of our system") |
-| **Components** | At least 3 named nodes/actors/services | No components mentioned, or only 1-2 generic ones |
-| **Purpose** | Stated or inferable audience/use (docs, slides, README, internal) | No context for who will see this or where it will be used |
+⛔ **Do NOT fill in missing info yourself. Do NOT infer what the user didn't say. ASK THEM.**
 
-**Style** is optional — auto-detect works well. Only ask if the user seems to care about visual presentation.
+Score the user's request — output this evaluation visibly:
 
-### Decision logic
+```
+Subject:    ✅ or ❌ — [what user said or didn't say]
+Type:       ✅ or ❌ — [what user said or didn't say]
+Components: ✅ or ❌ — [what user said or didn't say]
+Purpose:    ✅ or ❌ — [what user said or didn't say]
+→ Result:   PASS / ASK
+```
 
-- **All 4 sufficient** → proceed to Step 1
-- **1-2 insufficient** → ask ONE combined question covering all gaps. Example:
+| Dimension | ✅ PASS | ❌ FAIL (must ask) |
+|-----------|---------|-------------------|
+| **Subject** | Named system/process ("RAG pipeline", "OAuth flow") | Vague ("draw a diagram", "visualize auth") |
+| **Type** | Explicit or unambiguous ("flowchart of X") | Generic ("diagram of...") |
+| **Components** | ≥3 specific named nodes/services | 0-2 components or only generic terms |
+| **Purpose** | User stated audience/use | No context |
 
-  > "Để tạo diagram chất lượng tốt, tôi cần thêm thông tin:
-  > 1. **Loại diagram**: bạn muốn kiến trúc tổng thể hay flowchart quy trình?
-  > 2. **Thành phần chính**: những service/component nào cần có trong diagram?
-  >
-  > (Style tôi sẽ tự chọn phù hợp, bạn có thể điều chỉnh sau.)"
+### If ANY dimension is ❌ → STOP. Ask ONE combined question. Do NOT proceed.
 
-- **3-4 insufficient** → the request is too vague. Ask an open-ended question:
+Example:
+> "Để tạo diagram chất lượng, tôi cần biết thêm:
+> 1. **Loại diagram**: architecture, flowchart, hay sequence?
+> 2. **Thành phần**: cụ thể gồm service/component nào?
+> 3. **Mục đích**: dùng cho docs, slides, hay README?"
 
-  > "Bạn có thể mô tả thêm hệ thống bạn muốn vẽ không? Ví dụ: gồm những thành phần gì, dữ liệu chạy từ đâu đến đâu, và diagram này dùng cho mục đích gì (docs, slides, README)?"
+### Rules:
+- **ONE round** of questions max
+- After user responds, if partially missing → state assumptions explicitly, ask user to confirm
+- **Style** is the ONLY thing you may auto-detect
 
-**Rules**:
-- Ask **at most ONE round** of questions — never chain 3-4 rounds of back-and-forth
-- Combine all missing items into a single, clear message
-- If the user answers partially, fill in reasonable defaults for the rest and confirm
-- **NEVER** proceed to generation with insufficient information — low-quality input = low-quality output
+### Examples — be strict:
+- ❌ "vẽ diagram authentication" → no type, no components, no purpose
+- ❌ "vẽ kiến trúc backend" → no components named
+- ✅ "vẽ flowchart login: user nhập credentials → validate → 2FA → OTP → success" → all clear
 
 **WAIT** for user response before proceeding.
 

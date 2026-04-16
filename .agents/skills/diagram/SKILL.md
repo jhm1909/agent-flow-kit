@@ -34,35 +34,61 @@ Generate production-quality SVG diagrams from natural language descriptions.
 ```
 
 **Pre-generation checklist** — MUST pass before calling any script:
-- [ ] Can I write the COMPLETE JSON right now?
-- [ ] Do I have ALL nodes, edges, and containers identified?
+- [ ] Did Step 0 pass? (user provided sufficient info, or answered clarifying questions)
+- [ ] Can I write the COMPLETE JSON using ONLY what the user told me?
+- [ ] Do I have ALL nodes, edges, and containers identified FROM USER INPUT?
 - [ ] Have I mapped each concept to the correct shape?
-**If ANY is NO → STOP. Prepare first. Do NOT call a script with incomplete data.**
+**If ANY is NO → STOP. Go back to Step 0 or prepare first. Do NOT generate with self-inferred data.**
 
 ---
 
-## Step 0: Evaluate Request Completeness
+## Step 0: Evaluate Request Completeness (HARD GATE)
 
-Before any work, score the request on 4 dimensions:
+⛔ **THIS STEP IS MANDATORY. You are FORBIDDEN from skipping to Step 1 without completing this evaluation.**
 
-| Dimension | Sufficient | Insufficient (must ask) |
+⛔ **DO NOT fill in missing information yourself. DO NOT infer components the user didn't mention. DO NOT assume you know what they want. ASK THEM.**
+
+Before any work — before classifying, before thinking about JSON, before touching any script — you MUST score the request:
+
+| Dimension | ✅ PASS (user explicitly provided) | ❌ FAIL (must ask user) |
 |-----------|-----------|------------------------|
-| **Subject** | Clear topic with named components | Vague ("draw a diagram", "visualize auth") |
-| **Type** | Explicit or unambiguously inferable | Could be multiple types |
-| **Components** | ≥3 named nodes/actors/services | No components or only 1-2 generic ones |
-| **Purpose** | Audience/use stated or inferable (docs, slides, README) | No context |
+| **Subject** | Named system/process ("RAG pipeline", "OAuth login flow") | Vague ("draw a diagram", "visualize auth", "diagram for my project") |
+| **Type** | Explicit type or unambiguous ("flowchart of X", "sequence diagram for Y") | Generic ("diagram of...", "visualize...") |
+| **Components** | ≥3 specific named nodes/services/actors by the user | User named 0-2 components, or only generic terms ("frontend", "backend") |
+| **Purpose** | User stated where/how it will be used | No context |
 
-**Style** is optional — auto-detect works. Only ask if user seems to care.
+### Scoring — output this table before proceeding:
 
-**Decision**:
-- **All sufficient** → proceed to Step 1
-- **1-2 missing** → ask ONE combined question covering all gaps
-- **3-4 missing** → ask one open-ended question for the user to describe more
+```
+Subject:    ✅ or ❌ — [reason]
+Type:       ✅ or ❌ — [reason]
+Components: ✅ or ❌ — [reason]
+Purpose:    ✅ or ❌ — [reason]
+→ Result:   PASS / ASK
+```
 
-**Rules**:
-- **At most ONE round** of questions — combine all gaps into a single message
-- If user answers partially → fill reasonable defaults, confirm, proceed
-- **NEVER** generate with insufficient info — low-quality input = low-quality output
+### Decision:
+
+- **All ✅** → proceed to Step 1
+- **Any ❌** → you MUST ask the user. **STOP HERE. Do not proceed.**
+
+Combine all ❌ items into **ONE message**. Example:
+
+> "Để tạo diagram chất lượng, tôi cần biết thêm:
+> 1. **Loại diagram**: bạn muốn architecture, flowchart, hay sequence?
+> 2. **Thành phần**: cụ thể gồm service/component nào?
+> 3. **Mục đích**: dùng cho docs, slides, hay README?"
+
+### Rules:
+- Ask **at most ONE round** of questions
+- After user responds, if still partially missing → fill reasonable defaults and **state your assumptions explicitly** for user to confirm
+- **Style** is the ONLY dimension you may auto-detect without asking
+
+### What counts as "sufficient" — be strict:
+- ❌ "vẽ diagram authentication" → Subject vague, no components, no type
+- ❌ "diagram cho hệ thống của tôi" → Everything missing
+- ❌ "vẽ kiến trúc backend" → Has type, but no components named
+- ✅ "vẽ flowchart login: user nhập credentials → validate → check 2FA → OTP → success" → All clear
 
 ---
 

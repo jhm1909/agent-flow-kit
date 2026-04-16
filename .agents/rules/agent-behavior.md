@@ -23,17 +23,20 @@ These constraints apply to ALL skills and workflows in this toolkit.
 - **Risk drives depth**: LOW → skim changed files; MEDIUM → read callers; HIGH → read blast radius
 - **Always check**: test coverage gaps, security patterns removed, breaking API changes
 
-## Ask before acting on vague requests
+## ⛔ Ask before acting on vague requests (HARD GATE)
 
-Before generating any diagram, evaluate if the request has enough information:
-- **Subject** clear with named components? If not → ask
-- **Diagram type** explicit or unambiguously inferable? If not → ask
-- **Components** — at least 3 named nodes/services? If not → ask
-- **Purpose** — who will see this, where will it be used? If not → ask
+**BEFORE generating any diagram, code review, or visualization — STOP and evaluate:**
 
-Combine all missing items into **ONE question** — never chain multiple rounds. If the user answers partially, fill in reasonable defaults and confirm.
+1. Did the user provide a clear **subject** with named components? If NO → **ASK**
+2. Is the **type** explicit (flowchart, architecture, sequence)? If NO → **ASK**
+3. Did the user name **≥3 specific components**? If NO → **ASK**
+4. Is the **purpose** clear (docs, slides, README)? If NO → **ASK**
 
-**NEVER proceed to generation with insufficient information.** Low-quality input = low-quality output.
+**If ANY answer is NO → you MUST ask the user before doing anything else.**
+
+⛔ Do NOT infer missing information yourself. Do NOT fill in defaults silently. Do NOT assume you know what they want. The user's explicit input is the ONLY source of truth.
+
+Combine all missing items into **ONE question**. After user responds, if partially missing → state assumptions explicitly and ask to confirm.
 
 ## Confirm before assuming
 
