@@ -237,21 +237,29 @@ def _auto_size(node: dict) -> tuple[int, int]:
     return w, h
 
 
-def compute_layout(nodes: list[dict], edges: list[dict] | None = None) -> dict[str, dict[str, int]]:
+def compute_layout(
+    nodes: list[dict],
+    edges: list[dict] | None = None,
+    containers: list[dict] | None = None,
+) -> tuple[dict[str, dict[str, int]], int, list[dict]]:
     """
     Assign (x, y, w, h) to every node using Sugiyama hierarchical layout.
-    Uses vendored grandalf engine for proper overlap-free positioning.
-    Returns a mapping of node id -> {x, y, w, h}.
+    Returns (positions, canvas_w, positioned_containers).
     """
+    positioned_containers: list[dict] = []
+
     try:
         from layout.engine import compute_layout as _engine_layout
         data = {"nodes": nodes, "edges": edges or []}
+        if containers:
+            data["containers"] = containers
         result = _engine_layout(data)
         positions: dict[str, dict[str, int]] = {}
         for n in result.get("nodes", []):
             positions[n["id"]] = {"x": n["x"], "y": n["y"], "w": n["width"], "h": n["height"]}
         canvas_w = result.get("_canvas_width", 960)
-        return positions, canvas_w
+        positioned_containers = result.get("containers", [])
+        return positions, canvas_w, positioned_containers
     except ImportError:
         pass
 
@@ -338,7 +346,7 @@ def compute_layout(nodes: list[dict], edges: list[dict] | None = None) -> dict[s
             positions[nid] = {"x": cur_x, "y": y_top + y_offset, "w": w, "h": h}
             cur_x = snap(cur_x + w + H_SPACE)
 
-    return positions, canvas_w
+    return positions, canvas_w, []  # no containers in fallback layout
 
 
 # ---------------------------------------------------------------------------
@@ -913,17 +921,21 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
 
     nodes: list[dict] = data.get("nodes", [])
     edges: list[dict] = data.get("edges", [])
+    containers: list[dict] = data.get("containers", [])
     title: str | None = data.get("title")
 
     if not nodes:
         raise ValueError("No nodes provided in input JSON.")
 
-    positions, canvas_w = compute_layout(nodes, edges)
+    positions, canvas_w, positioned_containers = compute_layout(nodes, edges, containers)
 
     title_offset = 36 if title else 0
     if title:
         for nid in positions:
             positions[nid]["y"] += title_offset
+        # Also offset containers
+        for c in positioned_containers:
+            c["y"] = c.get("y", 0) + title_offset
 
     # Canvas sizing from actual content bounds
     max_x = max(p["x"] + p["w"] for p in positions.values())
@@ -985,6 +997,42 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
 
     # Check if shadow filter was added
     has_shadow = style_name in ("glassmorphism", "claude-official", "openai-official", "dark-terminal")
+
+    # Containers (drawn first — background layer, behind edges and nodes)
+    if positioned_containers:
+        container_group = ET.SubElement(svg, "g", {"class": "containers"})
+        for c in positioned_containers:
+            cx = c.get("x", 0)
+            cy = c.get("y", 0)
+            cw = c.get("width", 200)
+            ch = c.get("height", 100)
+            clabel = c.get("label", "")
+            cstroke = c.get("stroke", style["node_stroke"])
+            cfill = c.get("fill", "none")
+
+            # Container background rect (dashed border)
+            ET.SubElement(container_group, "rect", {
+                "x": str(cx), "y": str(cy),
+                "width": str(cw), "height": str(ch),
+                "rx": "8", "ry": "8",
+                "fill": cfill if cfill != "none" else (style["bg"] if style["bg"] != "#ffffff" else "none"),
+                "fill-opacity": "0.06" if cfill == "none" else "1",
+                "stroke": cstroke,
+                "stroke-width": "1",
+                "stroke-dasharray": "6,4",
+            })
+
+            # Container label (top-left, uppercase, small)
+            if clabel:
+                ET.SubElement(container_group, "text", {
+                    "x": str(cx + 12),
+                    "y": str(cy + 18),
+                    "fill": cstroke,
+                    "font-family": style["font"],
+                    "font-size": "10",
+                    "font-weight": "600",
+                    "letter-spacing": "0.06em",
+                }).text = clabel.upper()
 
     # Edges (drawn before nodes so they appear behind)
     edge_group = ET.SubElement(svg, "g", {"class": "edges"})
@@ -1196,7 +1244,7 @@ def main(argv: list[str] | None = None) -> int:
 
     # Warn if input has features this script doesn't support
     if "containers" in data:
-        print("Warning: svg-gen.py ignores 'containers'. For container/swim-lane support, use generate-from-template.py instead.", file=sys.stderr)
+        print(f"Info: {len(data['containers'])} container(s) detected — using grouped layout.", file=sys.stderr)
     if any("x" in n and "y" in n for n in nodes):
         print("Warning: svg-gen.py ignores absolute x/y positions. It uses auto-layout based on 'layer' field.", file=sys.stderr)
 

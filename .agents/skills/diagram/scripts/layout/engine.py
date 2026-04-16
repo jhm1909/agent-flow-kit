@@ -224,7 +224,31 @@ def _layout_with_containers(
             and e.get("to", e.get("target", "")) in node_ids
         ]
 
-        sub_result = _layout_flat(group_nodes, internal_edges)
+        if internal_edges:
+            sub_result = _layout_flat(group_nodes, internal_edges)
+        else:
+            # No internal edges: simple horizontal arrangement with generous spacing
+            positioned = []
+            cur_x = MARGIN
+            max_h = 0
+            for n in group_nodes:
+                label = n.get("label", n.get("id", ""))
+                shape = n.get("shape", n.get("kind", "rect"))
+                w = n.get("width") or _auto_node_width(label, shape)
+                lines = label.split("\n") if label else [""]
+                auto_h = max(DEFAULT_NODE_H, len(lines) * LINE_H + PAD_Y)
+                h = n.get("height") or (((auto_h + 7) // 8) * 8)
+                positioned.append({**n, "x": cur_x, "y": MARGIN, "width": w, "height": h})
+                cur_x += w + H_SPACE + 60  # generous spacing inside containers
+                max_h = max(max_h, h)
+            total_w = cur_x - H_SPACE - 60 + MARGIN if positioned else 200
+            sub_result = {
+                "nodes": positioned,
+                "edges": [],
+                "width": total_w,
+                "height": max_h + MARGIN * 2,
+            }
+
         container_map[cid] = {
             "width": sub_result["width"] + CONTAINER_PAD * 2,
             "height": sub_result["height"] + CONTAINER_PAD * 2 + CONTAINER_HEADER,
