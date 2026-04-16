@@ -67,12 +67,18 @@ def _estimate_text_width(label: str, font_size: float = 13) -> float:
     return sum((CHAR_W_CJK if _is_wide_char(ch) else CHAR_W_LATIN) * scale for ch in label)
 
 
-def _auto_node_width(label: str) -> int:
+def _auto_node_width(label: str, shape: str = "rect") -> int:
     # Handle multiline labels — use widest line
     lines = label.split("\n") if label else [""]
     text_w = max(_estimate_text_width(line) for line in lines)
-    padding = 24 * 2  # PAD_X on both sides
-    w = max(MIN_NODE_W, min(MAX_NODE_W, int(text_w + padding)))
+    # Shape-aware: hexagons/diamonds need wider bounding box for same text
+    if shape in ("diamond", "decision"):
+        area_w = text_w / 0.5 + 24  # diamond usable ≈ 50%
+    elif shape in ("hexagon", "agent"):
+        area_w = text_w / 0.7 + 24  # hexagon usable ≈ 70%
+    else:
+        area_w = text_w + 24 * 2
+    w = max(MIN_NODE_W, min(MAX_NODE_W, int(area_w)))
     return ((w + 7) // 8) * 8
 
 
@@ -303,7 +309,8 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
     for n in nodes:
         nid = n.get("id", "")
         label = n.get("label", nid)
-        w = n.get("width") or _auto_node_width(label)
+        shape = n.get("shape", n.get("kind", "rect"))
+        w = n.get("width") or _auto_node_width(label, shape)
         h = n.get("height") or DEFAULT_NODE_H
 
         v = Vertex(data=n)

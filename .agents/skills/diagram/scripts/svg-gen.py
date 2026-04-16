@@ -159,7 +159,20 @@ def _auto_size(node: dict) -> tuple[int, int]:
     label = node.get("label", node.get("id", ""))
     lines = _label_lines(label)
     longest_w = max((_text_width(line) for line in lines), default=0)
-    w = snap(max(MIN_W, min(MAX_W, longest_w + PAD_X * 2)))
+
+    # Shape-aware padding: non-rectangular shapes have less usable text area
+    shape = node.get("shape", "rect")
+    if shape in ("diamond", "decision"):
+        # Diamond: usable text width ≈ 50% of bounding box
+        text_area_w = longest_w / 0.5 + PAD_X
+    elif shape in ("hexagon", "agent"):
+        # Hexagon: usable text width ≈ 70% of bounding box
+        text_area_w = longest_w / 0.7 + PAD_X
+    else:
+        # Rectangular shapes: full width minus padding
+        text_area_w = longest_w + PAD_X * 2
+
+    w = snap(max(MIN_W, min(MAX_W, text_area_w)))
     h = snap(max(PAD_Y * 2, len(lines) * LINE_H + PAD_Y))
     if node.get("width"):
         w = int(node["width"])
