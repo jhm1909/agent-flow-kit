@@ -531,6 +531,16 @@ def _resolve_output(output_path: str, output_dir: str | None = None) -> str:
 
     os.makedirs(out_dir, exist_ok=True)
     resolved = os.path.join(out_dir, os.path.basename(output_path))
+
+    # Safety net: never overwrite existing files — append counter
+    if os.path.exists(resolved):
+        base, ext = os.path.splitext(resolved)
+        counter = 1
+        while os.path.exists(f"{base}_{counter}{ext}"):
+            counter += 1
+        resolved = f"{base}_{counter}{ext}"
+        print(f"File exists, renamed to: {resolved}", file=sys.stderr)
+
     print(f"Output: {resolved}", file=sys.stderr)
     return resolved
 

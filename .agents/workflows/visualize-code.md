@@ -52,15 +52,19 @@ description: Auto-generates architecture diagram from codebase analysis. Chains 
 
 // turbo
 
-1. **Invoke `[diagram]` skill** — generate SVG:
+1. **Choose a descriptive filename** based on the project or scope (e.g., `myapp-architecture.svg`, `backend-modules.svg`). Never use generic names like `output.svg`.
+
+2. **Invoke `[diagram]` skill** — generate SVG:
    ```bash
-   cat .agents-output/visualize/tmp/arch-data.json | python3 skills/diagram/scripts/svg-gen.py -o architecture.svg --style blueprint --output-dir .agents-output/visualize/svg
+   cat .agents-output/visualize/tmp/arch-data.json | python3 skills/diagram/scripts/svg-gen.py -o <descriptive-name>.svg --style blueprint --output-dir .agents-output/visualize/svg
    ```
    Default style: `blueprint` (best for architecture diagrams per style-diagram-matrix).
 
-2. **Validate**:
+   > Scripts automatically append a counter (`_1`, `_2`, ...) if a file with the same name already exists.
+
+3. **Validate**:
    ```bash
-   bash skills/diagram/scripts/validate-svg.sh .agents-output/visualize/svg/architecture.svg
+   bash skills/diagram/scripts/validate-svg.sh .agents-output/visualize/svg/<descriptive-name>.svg
    ```
 
 3. If validation fails → fix and regenerate (follow diagram skill's 3-strike protocol).

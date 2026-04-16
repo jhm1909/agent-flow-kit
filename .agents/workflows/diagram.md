@@ -8,6 +8,48 @@ description: Orchestrates diagram generation from text description to validated 
 
 ---
 
+## Step 0: Evaluate Request Completeness
+
+// turbo
+
+Before doing any work, score the user's request against these 4 dimensions:
+
+| Dimension | Sufficient | Insufficient (must ask) |
+|-----------|-----------|------------------------|
+| **Subject** | Clear topic with named components ("RAG pipeline with Pinecone and GPT-4") | Vague topic ("draw a diagram", "visualize authentication") |
+| **Type** | Explicit or unambiguously inferable ("flowchart of login process") | Ambiguous — could be multiple types ("diagram of our system") |
+| **Components** | At least 3 named nodes/actors/services | No components mentioned, or only 1-2 generic ones |
+| **Purpose** | Stated or inferable audience/use (docs, slides, README, internal) | No context for who will see this or where it will be used |
+
+**Style** is optional — auto-detect works well. Only ask if the user seems to care about visual presentation.
+
+### Decision logic
+
+- **All 4 sufficient** → proceed to Step 1
+- **1-2 insufficient** → ask ONE combined question covering all gaps. Example:
+
+  > "Để tạo diagram chất lượng tốt, tôi cần thêm thông tin:
+  > 1. **Loại diagram**: bạn muốn kiến trúc tổng thể hay flowchart quy trình?
+  > 2. **Thành phần chính**: những service/component nào cần có trong diagram?
+  >
+  > (Style tôi sẽ tự chọn phù hợp, bạn có thể điều chỉnh sau.)"
+
+- **3-4 insufficient** → the request is too vague. Ask an open-ended question:
+
+  > "Bạn có thể mô tả thêm hệ thống bạn muốn vẽ không? Ví dụ: gồm những thành phần gì, dữ liệu chạy từ đâu đến đâu, và diagram này dùng cho mục đích gì (docs, slides, README)?"
+
+**Rules**:
+- Ask **at most ONE round** of questions — never chain 3-4 rounds of back-and-forth
+- Combine all missing items into a single, clear message
+- If the user answers partially, fill in reasonable defaults for the rest and confirm
+- **NEVER** proceed to generation with insufficient information — low-quality input = low-quality output
+
+**WAIT** for user response before proceeding.
+
+**Output**: Complete understanding of what to generate
+
+---
+
 ## Step 1: Understand & Classify
 
 // turbo
@@ -67,19 +109,23 @@ description: Orchestrates diagram generation from text description to validated 
    # Write JSON to .agents-output/diagram/tmp/input.json
    ```
 
-2. Choose generator based on complexity:
+2. **Choose a descriptive filename** based on diagram content (e.g., `auth-flow.svg`, `rag-pipeline.svg`, `payment-sequence.svg`). Never use generic names like `output.svg` or `diagram.svg`.
+
+3. Choose generator based on complexity:
    - **6+ nodes, containers, swim lanes** → use `generate-from-template.py`:
      ```bash
-     python3 skills/diagram/scripts/generate-from-template.py <type> output.svg -i .agents-output/diagram/tmp/input.json
+     python3 skills/diagram/scripts/generate-from-template.py <type> <descriptive-name>.svg -i .agents-output/diagram/tmp/input.json
      ```
    - **≤5 nodes, simple structure** → use `svg-gen.py`:
      ```bash
-     cat .agents-output/diagram/tmp/input.json | python3 skills/diagram/scripts/svg-gen.py -o output.svg --style <style>
+     cat .agents-output/diagram/tmp/input.json | python3 skills/diagram/scripts/svg-gen.py -o <descriptive-name>.svg --style <style>
      ```
 
-3. Check exit code — 0 = success.
+4. Check exit code — 0 = success.
 
 **Output**: SVG file in `.agents-output/diagram/svg/`
+
+> **Note**: Scripts automatically append a counter (`_1`, `_2`, ...) if a file with the same name already exists — previous diagrams are never overwritten.
 
 ---
 
@@ -89,7 +135,7 @@ description: Orchestrates diagram generation from text description to validated 
 
 1. **Level 1 — XML validity**:
    ```bash
-   bash skills/diagram/scripts/validate-svg.sh .agents-output/diagram/svg/output.svg
+   bash skills/diagram/scripts/validate-svg.sh .agents-output/diagram/svg/<descriptive-name>.svg
    ```
 
 2. **Level 2 — Visual correctness** (check the generated SVG):
@@ -122,6 +168,7 @@ description: Orchestrates diagram generation from text description to validated 
 
 | Step | Skill | Output |
 |------|-------|--------|
+| 0 | — | Evaluate request completeness, ask if needed |
 | 1 | diagram | Diagram type classification |
 | 2 | diagram | JSON structure (nodes, edges, containers) |
 | 3 | diagram | Confirmed visual style |

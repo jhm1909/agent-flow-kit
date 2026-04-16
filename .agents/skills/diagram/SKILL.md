@@ -23,13 +23,14 @@ Generate production-quality SVG diagrams from natural language descriptions.
 ## Mandatory Workflow (Always Follow This Order)
 
 ```
-1. CLASSIFY → What type of diagram?
-2. EXTRACT  → Identify layers, nodes, edges, flows, groups
-3. MAP      → Assign semantic shapes + arrow types
-4. STYLE    → Choose visual style (or auto-detect + confirm)
-5. GENERATE → Build JSON → run script → SVG
-6. VALIDATE → Check quality (not just XML validity)
-7. DELIVER  → File path + summary
+0. EVALUATE  → Is the request complete enough to produce a quality diagram?
+1. CLASSIFY  → What type of diagram?
+2. EXTRACT   → Identify layers, nodes, edges, flows, groups
+3. MAP       → Assign semantic shapes + arrow types
+4. STYLE     → Choose visual style (or auto-detect + confirm)
+5. GENERATE  → Build JSON → run script → SVG
+6. VALIDATE  → Check quality (not just XML validity)
+7. DELIVER   → File path + summary
 ```
 
 **Pre-generation checklist** — MUST pass before calling any script:
@@ -37,6 +38,31 @@ Generate production-quality SVG diagrams from natural language descriptions.
 - [ ] Do I have ALL nodes, edges, and containers identified?
 - [ ] Have I mapped each concept to the correct shape?
 **If ANY is NO → STOP. Prepare first. Do NOT call a script with incomplete data.**
+
+---
+
+## Step 0: Evaluate Request Completeness
+
+Before any work, score the request on 4 dimensions:
+
+| Dimension | Sufficient | Insufficient (must ask) |
+|-----------|-----------|------------------------|
+| **Subject** | Clear topic with named components | Vague ("draw a diagram", "visualize auth") |
+| **Type** | Explicit or unambiguously inferable | Could be multiple types |
+| **Components** | ≥3 named nodes/actors/services | No components or only 1-2 generic ones |
+| **Purpose** | Audience/use stated or inferable (docs, slides, README) | No context |
+
+**Style** is optional — auto-detect works. Only ask if user seems to care.
+
+**Decision**:
+- **All sufficient** → proceed to Step 1
+- **1-2 missing** → ask ONE combined question covering all gaps
+- **3-4 missing** → ask one open-ended question for the user to describe more
+
+**Rules**:
+- **At most ONE round** of questions — combine all gaps into a single message
+- If user answers partially → fill reasonable defaults, confirm, proceed
+- **NEVER** generate with insufficient info — low-quality input = low-quality output
 
 ---
 
@@ -167,16 +193,18 @@ For exact style specs (colors, fonts, effects): `references/style-N-*.md`
    .agents-output/diagram/tmp/input.json
    ```
 
-2. **Run the script**:
+2. **Choose a descriptive filename** based on diagram content (e.g., `auth-flow.svg`, `rag-pipeline.svg`). Never use generic names like `output.svg`.
+
+3. **Run the script**:
    ```bash
    # Complex diagrams
-   python3 scripts/generate-from-template.py <type> output.svg -i .agents-output/diagram/tmp/input.json
+   python3 scripts/generate-from-template.py <type> <descriptive-name>.svg -i .agents-output/diagram/tmp/input.json
 
    # Simple diagrams (auto-layout)
-   cat .agents-output/diagram/tmp/input.json | python3 scripts/svg-gen.py -o output.svg --style <style>
+   cat .agents-output/diagram/tmp/input.json | python3 scripts/svg-gen.py -o <descriptive-name>.svg --style <style>
    ```
 
-3. Output goes to `.agents-output/diagram/svg/` automatically.
+4. Output goes to `.agents-output/diagram/svg/` automatically. If a file with the same name exists, a counter is appended (`_1`, `_2`, ...) — previous diagrams are never overwritten.
 
 ### JSON format
 
@@ -192,7 +220,7 @@ See `resources/` for 7 complete examples. Key fields:
 
 ### Level 1: XML validity
 ```bash
-bash scripts/validate-svg.sh .agents-output/diagram/svg/output.svg
+bash scripts/validate-svg.sh .agents-output/diagram/svg/<descriptive-name>.svg
 ```
 
 ### Level 2: Visual correctness (check manually)

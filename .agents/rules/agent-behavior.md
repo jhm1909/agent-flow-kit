@@ -23,6 +23,18 @@ These constraints apply to ALL skills and workflows in this toolkit.
 - **Risk drives depth**: LOW → skim changed files; MEDIUM → read callers; HIGH → read blast radius
 - **Always check**: test coverage gaps, security patterns removed, breaking API changes
 
+## Ask before acting on vague requests
+
+Before generating any diagram, evaluate if the request has enough information:
+- **Subject** clear with named components? If not → ask
+- **Diagram type** explicit or unambiguously inferable? If not → ask
+- **Components** — at least 3 named nodes/services? If not → ask
+- **Purpose** — who will see this, where will it be used? If not → ask
+
+Combine all missing items into **ONE question** — never chain multiple rounds. If the user answers partially, fill in reasonable defaults and confirm.
+
+**NEVER proceed to generation with insufficient information.** Low-quality input = low-quality output.
+
 ## Confirm before assuming
 
 - Diagram style not specified → auto-detect + ask user to confirm
@@ -35,6 +47,14 @@ These constraints apply to ALL skills and workflows in this toolkit.
 1. **First error**: analyze root cause, fix the specific issue, retry
 2. **Second error**: switch method entirely (different script, different approach)
 3. **Third error**: **STOP.** Report error to user. Do NOT retry blindly.
+
+## Name output files descriptively
+
+- **Diagrams**: name after diagram content — `auth-flow.svg`, `rag-pipeline.svg`, `payment-sequence.svg`
+- **Architecture**: name after project or scope — `myapp-architecture.svg`, `backend-modules.svg`
+- **Reports**: name after analysis type — `blast-radius-auth.json`, `hub-detect-api.json`
+- **Never** use generic names like `output.svg`, `diagram.svg`, `result.json`
+- Scripts auto-append counters (`_1`, `_2`, ...) if a file with the same name exists — previous outputs are never overwritten
 
 ## Output to .agents-output/
 
