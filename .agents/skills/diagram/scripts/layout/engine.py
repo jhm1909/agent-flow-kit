@@ -381,11 +381,20 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
 
     g = Graph(list(vertex_map.values()), edge_objects, directed=True)
 
+    # Adaptive vertical spacing based on node count
+    num_nodes = len(vertex_map)
+    if num_nodes <= 8:
+        adaptive_v = V_SPACE
+    elif num_nodes <= 14:
+        adaptive_v = max(88, V_SPACE - (num_nodes - 8) * 5)
+    else:
+        adaptive_v = max(72, 88 - (num_nodes - 14) * 3)
+
     # Layout each connected component
     for component in g.C:
         sug = SugiyamaLayout(component)
         sug.xspace = H_SPACE
-        sug.yspace = V_SPACE
+        sug.yspace = adaptive_v
         sug.init_all()
         sug.draw()
 

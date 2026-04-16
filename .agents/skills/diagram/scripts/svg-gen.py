@@ -150,7 +150,7 @@ def _get_edge_cfg(etype: str, style_name: str) -> dict[str, Any]:
     return cfg
 
 GRID = 8
-LAYER_V_SPACING = 120
+BASE_V_SPACING = 120     # base vertical spacing between layers
 H_SPACE = 80
 MARGIN = 40
 CHAR_W_LATIN = 7.5
@@ -320,6 +320,15 @@ def compute_layout(
                     bary[nid] = layer_order[li].index(nid)
             layer_order[li] = sorted(layer_order[li], key=lambda nid: bary.get(nid, 0))
 
+    # Adaptive vertical spacing: reduce for tall diagrams
+    num_layers = len(layer_order)
+    if num_layers <= 4:
+        v_spacing = BASE_V_SPACING
+    elif num_layers <= 8:
+        v_spacing = max(88, BASE_V_SPACING - (num_layers - 4) * 8)
+    else:
+        v_spacing = max(72, BASE_V_SPACING - 32 - (num_layers - 8) * 4)
+
     # Compute canvas width from widest row
     max_row_width = 0
     for li, nids in layer_order.items():
@@ -332,7 +341,7 @@ def compute_layout(
     for li in sorted(layer_order.keys()):
         nids = layer_order[li]
         layer_h = max((sizes[nid][1] for nid in nids), default=56)
-        y_top = snap(MARGIN + li * LAYER_V_SPACING)
+        y_top = snap(MARGIN + li * v_spacing)
 
         row_total_w = sum(sizes[nid][0] for nid in nids)
         h_gaps = H_SPACE * max(0, len(nids) - 1)
@@ -341,7 +350,6 @@ def compute_layout(
         cur_x = start_x
         for nid in nids:
             w, h = sizes[nid]
-            # Vertically center nodes of different heights within the same layer
             y_offset = (layer_h - h) // 2
             positions[nid] = {"x": cur_x, "y": y_top + y_offset, "w": w, "h": h}
             cur_x = snap(cur_x + w + H_SPACE)
@@ -689,36 +697,65 @@ def add_defs(svg: ET.Element, used_types: set[str], style_name: str = "flat-icon
 
     for etype in used_types:
         cfg = _get_edge_cfg(etype, style_name)
+        # Proportional markers: thinner edges get smaller arrowheads
+        edge_w = cfg["width"]
+        scale = max(0.7, min(1.2, edge_w / 2))
+        mw = round(10 * scale, 1)
+        mh = round(7 * scale, 1)
+        ref_x = round(9 * scale, 1)
+        ref_y = round(3.5 * scale, 1)
         marker = ET.SubElement(defs, "marker", {
             "id": _marker_id(etype),
-            "markerWidth": "10",
-            "markerHeight": "7",
-            "refX": "9",
-            "refY": "3.5",
+            "markerWidth": str(mw),
+            "markerHeight": str(mh),
+            "refX": str(ref_x),
+            "refY": str(ref_y),
             "orient": "auto",
         })
         ET.SubElement(marker, "polygon", {
-            "points": "0 0, 10 3.5, 0 7",
+            "points": f"0 0, {mw} {ref_y}, 0 {mh}",
             "fill": cfg["color"],
         })
 
 
-def _port(pos: dict[str, int], side: str) -> tuple[float, float]:
-    """Return (x, y) for a connection port on a node."""
+def _port(pos: dict[str, int], side: str, offset: float = 0) -> tuple[float, float]:
+    """Return (x, y) for a connection port on a node.
+    offset: horizontal shift for top/bottom ports, vertical for left/right (for port spreading).
+    """
     x, y, w, h = pos["x"], pos["y"], pos["w"], pos["h"]
     cx, cy = x + w / 2, y + h / 2
     if side == "top":
-        return cx, y
+        return cx + offset, y
     elif side == "bottom":
-        return cx, y + h
+        return cx + offset, y + h
     elif side == "left":
-        return x, cy
+        return x, cy + offset
     elif side == "right":
-        return x + w, cy
-    return cx, y + h  # default: bottom
+        return x + w, cy + offset
+    return cx + offset, y + h  # default: bottom
 
 
-def _detect_direction(src: dict[str, int], dst: dict[str, int]) -> tuple[str, str]:
+# Track port usage for spreading
+_port_usage: dict[tuple[str, str], int] = {}  # (node_id, side) -> count
+
+
+def _get_port_offset(node_id: str, side: str, node_w: float) -> float:
+    """Get offset for port spreading when multiple edges connect to same port."""
+    key = (node_id, side)
+    count = _port_usage.get(key, 0)
+    _port_usage[key] = count + 1
+    if count == 0:
+        return 0
+    # Spread ports: alternate left/right of center, max ±40% of node width
+    max_offset = node_w * 0.35
+    direction = 1 if count % 2 == 1 else -1
+    magnitude = ((count + 1) // 2) * 16
+    return direction * min(magnitude, max_offset)
+
+
+def _detect_direction(
+    src: dict[str, int], dst: dict[str, int], is_feedback: bool = False
+) -> tuple[str, str]:
     """Auto-detect best source/target ports based on relative positions."""
     scx = src["x"] + src["w"] / 2
     scy = src["y"] + src["h"] / 2
@@ -727,6 +764,10 @@ def _detect_direction(src: dict[str, int], dst: dict[str, int]) -> tuple[str, st
 
     dx = dcx - scx
     dy = dcy - scy
+
+    # Feedback/backward edges: always route around the right side
+    if is_feedback or dy < -30:
+        return "right", "right"
 
     # Same layer (horizontal) — use left/right
     if abs(dy) < 30:
@@ -737,21 +778,27 @@ def _detect_direction(src: dict[str, int], dst: dict[str, int]) -> tuple[str, st
 
     # Forward (down) — use bottom/top
     if dy > 0:
-        # If heavily offset horizontally, mix ports
         if abs(dx) > abs(dy) * 1.5:
             return ("right", "left") if dx > 0 else ("left", "right")
         return "bottom", "top"
 
-    # Backward (up) — loop around the side
-    if abs(dx) > abs(dy) * 1.5:
-        return ("right", "left") if dx > 0 else ("left", "right")
-    # Go down-right then up to target
-    return "right", "right" if dx >= 0 else ("left", "left")
+    return "bottom", "top"
 
 
 def _build_path(x1: float, y1: float, x2: float, y2: float,
-                src_port: str, dst_port: str) -> str:
+                src_port: str, dst_port: str, is_feedback: bool = False) -> str:
     """Build a smooth cubic bezier path based on port directions."""
+
+    # Feedback loops: clean arc around the right side
+    if is_feedback and src_port == "right" and dst_port == "right":
+        # Route: source right → loop right → target right
+        loop_x = max(x1, x2) + 60  # go 60px to the right of rightmost point
+        mid_y = (y1 + y2) / 2
+        return (f"M {x1:.1f} {y1:.1f} "
+                f"C {loop_x:.1f} {y1:.1f}, "
+                f"{loop_x:.1f} {y2:.1f}, "
+                f"{x2:.1f} {y2:.1f}")
+
     vertical_src = src_port in ("top", "bottom")
     vertical_dst = dst_port in ("top", "bottom")
 
@@ -766,7 +813,7 @@ def _build_path(x1: float, y1: float, x2: float, y2: float,
                 f"{x2:.1f} {y2:.1f}")
 
     if not vertical_src and not vertical_dst:
-        # Horizontal — left/right to left/right
+        # Horizontal — left/right to left/right (non-feedback)
         cp_offset = max(40, abs(x2 - x1) * 0.4)
         sign_s = 1 if src_port == "right" else -1
         sign_d = -1 if dst_port == "left" else 1
@@ -777,7 +824,6 @@ def _build_path(x1: float, y1: float, x2: float, y2: float,
 
     # Mixed: one vertical, one horizontal — smooth L-shaped curve
     if vertical_src:
-        # Source goes vertical, target is horizontal
         sign_s = 1 if src_port == "bottom" else -1
         mid_y = y1 + sign_s * max(40, abs(y2 - y1) * 0.5)
         return (f"M {x1:.1f} {y1:.1f} "
@@ -785,7 +831,6 @@ def _build_path(x1: float, y1: float, x2: float, y2: float,
                 f"{x1:.1f} {y2:.1f}, "
                 f"{x2:.1f} {y2:.1f}")
     else:
-        # Source is horizontal, target goes vertical
         sign_d = -1 if dst_port == "top" else 1
         mid_x = x1 + (1 if src_port == "right" else -1) * max(40, abs(x2 - x1) * 0.5)
         return (f"M {x1:.1f} {y1:.1f} "
@@ -858,13 +903,18 @@ def draw_edge(
 
     etype = edge.get("type", "primary")
     cfg = _get_edge_cfg(etype, style_name)
+    is_feedback = etype == "feedback"
 
     # Auto-detect port direction
-    src_port, dst_port = _detect_direction(src, dst)
-    x1, y1 = _port(src, src_port)
-    x2, y2 = _port(dst, dst_port)
+    src_port, dst_port = _detect_direction(src, dst, is_feedback)
 
-    path_d = _build_path(x1, y1, x2, y2, src_port, dst_port)
+    # Port spreading: offset when multiple edges connect to same port
+    src_offset = _get_port_offset(from_id, src_port, src["w"])
+    dst_offset = _get_port_offset(to_id, dst_port, dst["w"])
+    x1, y1 = _port(src, src_port, src_offset)
+    x2, y2 = _port(dst, dst_port, dst_offset)
+
+    path_d = _build_path(x1, y1, x2, y2, src_port, dst_port, is_feedback)
 
     attrs: dict[str, str] = {
         "d": path_d,
@@ -913,9 +963,57 @@ def draw_edge(
 # Main SVG builder
 # ---------------------------------------------------------------------------
 
+def _auto_assign_layers(nodes: list[dict], edges: list[dict]) -> None:
+    """Auto-assign layers via topological sort when nodes lack 'layer' field."""
+    if all("layer" in n for n in nodes):
+        return  # All have explicit layers
+
+    # Build adjacency
+    children: dict[str, list[str]] = {}
+    parents: dict[str, list[str]] = {}
+    node_ids = {n["id"] for n in nodes}
+    for e in edges:
+        src = e.get("from") or e.get("source", "")
+        tgt = e.get("to") or e.get("target", "")
+        if src in node_ids and tgt in node_ids and e.get("type") != "feedback":
+            children.setdefault(src, []).append(tgt)
+            parents.setdefault(tgt, []).append(src)
+
+    # Find roots (no parents)
+    all_ids = {n["id"] for n in nodes}
+    roots = all_ids - set(parents.keys())
+    if not roots:
+        roots = {nodes[0]["id"]}  # fallback: first node
+
+    # BFS layer assignment
+    layers: dict[str, int] = {}
+    queue = list(roots)
+    for r in roots:
+        layers[r] = 0
+    while queue:
+        nid = queue.pop(0)
+        for child in children.get(nid, []):
+            new_layer = layers[nid] + 1
+            if child not in layers or layers[child] < new_layer:
+                layers[child] = new_layer
+                queue.append(child)
+
+    # Apply to nodes
+    node_map = {n["id"]: n for n in nodes}
+    for nid, layer in layers.items():
+        if nid in node_map and "layer" not in node_map[nid]:
+            node_map[nid]["layer"] = layer
+
+    # Assign layer 0 to any remaining unassigned nodes
+    for n in nodes:
+        if "layer" not in n:
+            n["layer"] = 0
+
+
 def build_svg(data: dict, style_name: str = "flat-icon") -> str:
-    global _placed_labels
+    global _placed_labels, _port_usage
     _placed_labels = []  # Reset label collision tracker
+    _port_usage = {}     # Reset port spreading tracker
 
     style = STYLES.get(style_name, STYLES["flat-icon"])
 
@@ -926,6 +1024,9 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
 
     if not nodes:
         raise ValueError("No nodes provided in input JSON.")
+
+    # Auto-assign layers if not provided (topological sort from edges)
+    _auto_assign_layers(nodes, edges)
 
     positions, canvas_w, positioned_containers = compute_layout(nodes, edges, containers)
 
