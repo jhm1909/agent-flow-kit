@@ -88,7 +88,7 @@ STYLES: dict[str, dict[str, str]] = {
 }
 
 # ---------------------------------------------------------------------------
-# Arrow / edge type definitions
+# Arrow / edge type definitions (default fallback)
 # ---------------------------------------------------------------------------
 
 EDGE_TYPES: dict[str, dict[str, Any]] = {
@@ -99,6 +99,47 @@ EDGE_TYPES: dict[str, dict[str, Any]] = {
     "async":    {"color": "#6b7280", "width": 1.5, "dash": "4,2"},
     "feedback": {"color": "#7c3aed", "width": 1.5, "dash": None},
 }
+
+# Per-style edge colors (matched from generate-from-template.py palettes)
+STYLE_EDGE_COLORS: dict[str, dict[str, str]] = {
+    "flat-icon": {
+        "primary": "#2563eb", "control": "#7c3aed", "read": "#2563eb",
+        "write": "#10b981", "async": "#7c3aed", "feedback": "#ef4444",
+    },
+    "dark-terminal": {
+        "primary": "#38bdf8", "control": "#a855f7", "read": "#38bdf8",
+        "write": "#22c55e", "async": "#f59e0b", "feedback": "#f97316",
+    },
+    "blueprint": {
+        "primary": "#38bdf8", "control": "#67e8f9", "read": "#38bdf8",
+        "write": "#22d3ee", "async": "#c084fc", "feedback": "#fb7185",
+    },
+    "notion-clean": {
+        "primary": "#3b82f6", "control": "#3b82f6", "read": "#3b82f6",
+        "write": "#3b82f6", "async": "#9ca3af", "feedback": "#9ca3af",
+    },
+    "glassmorphism": {
+        "primary": "#60a5fa", "control": "#c084fc", "read": "#60a5fa",
+        "write": "#34d399", "async": "#f472b6", "feedback": "#f59e0b",
+    },
+    "claude-official": {
+        "primary": "#b45309", "control": "#d97757", "read": "#8c6f5a",
+        "write": "#7b8b5c", "async": "#9a6fb0", "feedback": "#d97757",
+    },
+    "openai-official": {
+        "primary": "#10a37f", "control": "#10a37f", "read": "#0891b2",
+        "write": "#0f766e", "async": "#64748b", "feedback": "#10a37f",
+    },
+}
+
+
+def _get_edge_cfg(etype: str, style_name: str) -> dict[str, Any]:
+    """Get edge config with style-specific color override."""
+    cfg = dict(EDGE_TYPES.get(etype, EDGE_TYPES["primary"]))
+    colors = STYLE_EDGE_COLORS.get(style_name, {})
+    if etype in colors:
+        cfg["color"] = colors[etype]
+    return cfg
 
 GRID = 8
 LAYER_V_SPACING = 120
@@ -408,6 +449,95 @@ def draw_node(
             "fill": fill, "stroke": stroke, "stroke-width": "1.5",
         })
 
+    elif shape in ("document", "doc"):
+        # Folded-corner rectangle (document shape)
+        fold = min(16, w * 0.12)
+        d = (
+            f"M {x} {y} "
+            f"L {x + w - fold} {y} "
+            f"L {x + w} {y + fold} "
+            f"L {x + w} {y + h} "
+            f"L {x} {y + h} Z"
+        )
+        ET.SubElement(g, "path", {
+            "d": d,
+            "fill": fill, "stroke": stroke, "stroke-width": "1.5",
+        })
+        # Fold triangle
+        fold_d = (
+            f"M {x + w - fold} {y} "
+            f"L {x + w - fold} {y + fold} "
+            f"L {x + w} {y + fold}"
+        )
+        ET.SubElement(g, "path", {
+            "d": fold_d,
+            "fill": stroke, "opacity": "0.2", "stroke": stroke, "stroke-width": "1",
+        })
+
+    elif shape in ("user_avatar", "user", "person"):
+        # Stick figure: circle head + body lines
+        head_r = min(12, h * 0.18)
+        head_cy = y + head_r + 4
+        body_top = head_cy + head_r + 2
+        body_mid = y + h * 0.55
+        body_bot = y + h - 6
+        arm_y = body_top + (body_mid - body_top) * 0.3
+        # Background rounded rect (clickable area)
+        ET.SubElement(g, "rect", {
+            "x": str(x), "y": str(y), "width": str(w), "height": str(h),
+            "rx": "12", "ry": "12",
+            "fill": fill, "stroke": stroke, "stroke-width": "1.5",
+        })
+        # Head
+        ET.SubElement(g, "circle", {
+            "cx": str(cx), "cy": str(head_cy), "r": str(head_r),
+            "fill": "none", "stroke": stroke, "stroke-width": "1.5",
+        })
+        # Body
+        ET.SubElement(g, "line", {
+            "x1": str(cx), "y1": str(body_top),
+            "x2": str(cx), "y2": str(body_mid),
+            "stroke": stroke, "stroke-width": "1.5",
+        })
+        # Arms
+        ET.SubElement(g, "line", {
+            "x1": str(cx - w * 0.2), "y1": str(arm_y),
+            "x2": str(cx + w * 0.2), "y2": str(arm_y),
+            "stroke": stroke, "stroke-width": "1.5",
+        })
+        # Legs
+        ET.SubElement(g, "line", {
+            "x1": str(cx), "y1": str(body_mid),
+            "x2": str(cx - w * 0.15), "y2": str(body_bot),
+            "stroke": stroke, "stroke-width": "1.5",
+        })
+        ET.SubElement(g, "line", {
+            "x1": str(cx), "y1": str(body_mid),
+            "x2": str(cx + w * 0.15), "y2": str(body_bot),
+            "stroke": stroke, "stroke-width": "1.5",
+        })
+
+    elif shape in ("terminal", "browser"):
+        # Rectangle with 3-dot titlebar
+        ET.SubElement(g, "rect", {
+            "x": str(x), "y": str(y), "width": str(w), "height": str(h),
+            "rx": "8", "ry": "8",
+            "fill": fill, "stroke": stroke, "stroke-width": "1.5",
+        })
+        # Titlebar line
+        bar_y = y + 14
+        ET.SubElement(g, "line", {
+            "x1": str(x), "y1": str(bar_y),
+            "x2": str(x + w), "y2": str(bar_y),
+            "stroke": stroke, "stroke-width": "1", "opacity": "0.4",
+        })
+        # 3 dots
+        for i, color in enumerate(["#ef4444", "#f59e0b", "#22c55e"]):
+            ET.SubElement(g, "circle", {
+                "cx": str(x + 12 + i * 10), "cy": str(y + 7),
+                "r": "2.5", "fill": color,
+            })
+
     else:
         # fallback: plain rect
         ET.SubElement(g, "rect", {
@@ -457,10 +587,30 @@ def _marker_id(edge_type: str) -> str:
     return f"arrow-{edge_type}"
 
 
-def add_defs(svg: ET.Element, used_types: set[str]) -> None:
+def add_defs(svg: ET.Element, used_types: set[str], style_name: str = "flat-icon") -> None:
     defs = ET.SubElement(svg, "defs")
+
+    # Shadow filters per style
+    STYLE_SHADOWS: dict[str, dict[str, str]] = {
+        "glassmorphism": {"dx": "0", "dy": "4", "stdDeviation": "8", "color": "#00000040"},
+        "claude-official": {"dx": "0", "dy": "2", "stdDeviation": "6", "color": "#00000012"},
+        "openai-official": {"dx": "0", "dy": "1", "stdDeviation": "4", "color": "#00000010"},
+        "dark-terminal": {"dx": "0", "dy": "0", "stdDeviation": "10", "color": "#6366f120"},
+    }
+    shadow_cfg = STYLE_SHADOWS.get(style_name)
+    if shadow_cfg:
+        filt = ET.SubElement(defs, "filter", {
+            "id": "nodeShadow", "x": "-10%", "y": "-10%",
+            "width": "120%", "height": "130%",
+        })
+        ET.SubElement(filt, "feDropShadow", {
+            "dx": shadow_cfg["dx"], "dy": shadow_cfg["dy"],
+            "stdDeviation": shadow_cfg["stdDeviation"],
+            "flood-color": shadow_cfg["color"],
+        })
+
     for etype in used_types:
-        cfg = EDGE_TYPES.get(etype, EDGE_TYPES["primary"])
+        cfg = _get_edge_cfg(etype, style_name)
         marker = ET.SubElement(defs, "marker", {
             "id": _marker_id(etype),
             "markerWidth": "10",
@@ -597,6 +747,7 @@ def draw_edge(
     edge: dict,
     positions: dict[str, dict[str, int]],
     style: dict[str, str],
+    style_name: str = "flat-icon",
 ) -> None:
     from_id = edge.get("from") or edge.get("source")
     to_id = edge.get("to") or edge.get("target")
@@ -608,7 +759,7 @@ def draw_edge(
     dst = positions[to_id]
 
     etype = edge.get("type", "primary")
-    cfg = EDGE_TYPES.get(etype, EDGE_TYPES["primary"])
+    cfg = _get_edge_cfg(etype, style_name)
 
     # Auto-detect port direction
     src_port, dst_port = _detect_direction(src, dst)
@@ -713,17 +864,23 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
             "font-weight": "700",
         }).text = title
 
-    # Arrow markers
+    # Arrow markers + shadow defs
     used_types = {e.get("type", "primary") for e in edges}
-    add_defs(svg, used_types)
+    add_defs(svg, used_types, style_name)
+
+    # Check if shadow filter was added
+    has_shadow = style_name in ("glassmorphism", "claude-official", "openai-official", "dark-terminal")
 
     # Edges (drawn before nodes so they appear behind)
     edge_group = ET.SubElement(svg, "g", {"class": "edges"})
     for edge in edges:
-        draw_edge(edge_group, edge, positions, style)
+        draw_edge(edge_group, edge, positions, style, style_name)
 
-    # Nodes
-    node_group = ET.SubElement(svg, "g", {"class": "nodes"})
+    # Nodes (with shadow filter if available)
+    node_attrs: dict[str, str] = {"class": "nodes"}
+    if has_shadow:
+        node_attrs["filter"] = "url(#nodeShadow)"
+    node_group = ET.SubElement(svg, "g", node_attrs)
     node_map = {n["id"]: n for n in nodes}
     for nid, pos in positions.items():
         draw_node(node_group, node_map[nid], pos, style)
@@ -748,7 +905,7 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
         }).text = "Legend"
         cur_x = legend_x
         for etype in sorted(used_types):
-            cfg = EDGE_TYPES.get(etype, EDGE_TYPES["primary"])
+            cfg = _get_edge_cfg(etype, style_name)
             label = LEGEND_LABELS.get(etype, etype.capitalize())
             # Line sample
             line_attrs: dict[str, str] = {
