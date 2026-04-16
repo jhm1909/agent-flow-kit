@@ -102,8 +102,12 @@ GRID = 8
 LAYER_V_SPACING = 120
 H_SPACE = 80
 MARGIN = 40
-DEFAULT_W = 140
-DEFAULT_H = 56
+CHAR_W = 7.5
+PAD_X = 24
+MIN_W = 100
+MAX_W = 280
+LINE_H = 18
+PAD_Y = 20
 
 
 # ---------------------------------------------------------------------------
@@ -113,6 +117,27 @@ DEFAULT_H = 56
 def snap(v: float) -> int:
     """Snap a value to the 8-px grid."""
     return int(round(v / GRID) * GRID)
+
+
+def _label_lines(label: str) -> list[str]:
+    """Split label into lines on \\n."""
+    return label.split("\n") if label else [""]
+
+
+def _auto_size(node: dict) -> tuple[int, int]:
+    """Compute (width, height) from label text. Respects explicit width/height if set."""
+    if "width" in node and "height" in node:
+        return int(node["width"]), int(node["height"])
+    label = node.get("label", node.get("id", ""))
+    lines = _label_lines(label)
+    longest = max((len(line) for line in lines), default=0)
+    w = snap(max(MIN_W, min(MAX_W, longest * CHAR_W + PAD_X * 2)))
+    h = snap(max(PAD_Y * 2, len(lines) * LINE_H + PAD_Y))
+    if node.get("width"):
+        w = int(node["width"])
+    if node.get("height"):
+        h = int(node["height"])
+    return w, h
 
 
 def compute_layout(nodes: list[dict], edges: list[dict] | None = None) -> dict[str, dict[str, int]]:
@@ -133,34 +158,87 @@ def compute_layout(nodes: list[dict], edges: list[dict] | None = None) -> dict[s
     except ImportError:
         pass
 
-    # Fallback: simple layer-based layout (if grandalf not available)
+    edges = edges or []
+
+    # Pre-compute sizes for all nodes
+    sizes: dict[str, tuple[int, int]] = {}
+    for n in nodes:
+        sizes[n["id"]] = _auto_size(n)
+
+    # Assign layers
     layers: dict[int, list[dict]] = {}
     for n in nodes:
         layer = int(n.get("layer", 0))
         layers.setdefault(layer, []).append(n)
 
-    max_row_width = 0
-    for layer_nodes in layers.values():
-        row_w = sum(int(n.get("width", DEFAULT_W)) for n in layer_nodes)
-        h_gap = H_SPACE * (len(layer_nodes) - 1)
-        max_row_width = max(max_row_width, row_w + h_gap)
+    # Edge-crossing minimization: barycenter heuristic
+    # Build adjacency for barycenter computation
+    node_layer: dict[str, int] = {n["id"]: int(n.get("layer", 0)) for n in nodes}
+    adj_down: dict[str, list[str]] = {}  # node -> children in next layer
+    adj_up: dict[str, list[str]] = {}    # node -> parents in prev layer
+    for e in edges:
+        src = e.get("from") or e.get("source", "")
+        tgt = e.get("to") or e.get("target", "")
+        adj_down.setdefault(src, []).append(tgt)
+        adj_up.setdefault(tgt, []).append(src)
 
-    canvas_w = max_row_width + 2 * MARGIN
+    # Initial ordering: by JSON order
+    layer_order: dict[int, list[str]] = {}
+    for li in sorted(layers.keys()):
+        layer_order[li] = [n["id"] for n in layers[li]]
+
+    # Barycenter sweep (2 passes: down then up)
+    for _sweep in range(4):
+        for li in sorted(layers.keys()):
+            if li == 0:
+                continue
+            prev_pos = {nid: idx for idx, nid in enumerate(layer_order[li - 1])}
+            bary: dict[str, float] = {}
+            for nid in layer_order[li]:
+                parents = [p for p in adj_up.get(nid, []) if p in prev_pos]
+                if parents:
+                    bary[nid] = sum(prev_pos[p] for p in parents) / len(parents)
+                else:
+                    bary[nid] = layer_order[li].index(nid)
+            layer_order[li] = sorted(layer_order[li], key=lambda nid: bary.get(nid, 0))
+
+        for li in sorted(layers.keys(), reverse=True):
+            if li == max(layers.keys()):
+                continue
+            next_pos = {nid: idx for idx, nid in enumerate(layer_order[li + 1])}
+            bary = {}
+            for nid in layer_order[li]:
+                children = [c for c in adj_down.get(nid, []) if c in next_pos]
+                if children:
+                    bary[nid] = sum(next_pos[c] for c in children) / len(children)
+                else:
+                    bary[nid] = layer_order[li].index(nid)
+            layer_order[li] = sorted(layer_order[li], key=lambda nid: bary.get(nid, 0))
+
+    # Compute canvas width from widest row
+    max_row_width = 0
+    for li, nids in layer_order.items():
+        row_w = sum(sizes[nid][0] for nid in nids) + H_SPACE * max(0, len(nids) - 1)
+        max_row_width = max(max_row_width, row_w)
+
+    canvas_w = max(max_row_width + 2 * MARGIN, 400)
     positions = {}
 
-    for layer_idx in sorted(layers.keys()):
-        layer_nodes = layers[layer_idx]
-        y_top = snap(MARGIN + layer_idx * LAYER_V_SPACING)
+    for li in sorted(layer_order.keys()):
+        nids = layer_order[li]
+        layer_h = max((sizes[nid][1] for nid in nids), default=56)
+        y_top = snap(MARGIN + li * LAYER_V_SPACING)
 
-        row_total_w = sum(int(n.get("width", DEFAULT_W)) for n in layer_nodes)
-        h_gaps = H_SPACE * (len(layer_nodes) - 1)
+        row_total_w = sum(sizes[nid][0] for nid in nids)
+        h_gaps = H_SPACE * max(0, len(nids) - 1)
         start_x = snap((canvas_w - row_total_w - h_gaps) / 2)
 
         cur_x = start_x
-        for n in layer_nodes:
-            w = snap(int(n.get("width", DEFAULT_W)))
-            h = snap(int(n.get("height", DEFAULT_H)))
-            positions[n["id"]] = {"x": cur_x, "y": y_top, "w": w, "h": h}
+        for nid in nids:
+            w, h = sizes[nid]
+            # Vertically center nodes of different heights within the same layer
+            y_offset = (layer_h - h) // 2
+            positions[nid] = {"x": cur_x, "y": y_top + y_offset, "w": w, "h": h}
             cur_x = snap(cur_x + w + H_SPACE)
 
     return positions, canvas_w
@@ -297,18 +375,37 @@ def draw_node(
             "fill": fill, "stroke": stroke, "stroke-width": "1.5",
         })
 
-    # Label text (centred)
-    txt = ET.SubElement(g, "text", {
-        "x": str(cx),
-        "y": str(cy),
-        "text-anchor": "middle",
-        "dominant-baseline": "central",
-        "fill": text_color,
-        "font-family": style["font"],
-        "font-size": "13",
-        "font-weight": "500",
-    })
-    txt.text = label
+    # Label text (centred, with multiline support)
+    lines = _label_lines(label)
+    if len(lines) == 1:
+        txt = ET.SubElement(g, "text", {
+            "x": str(cx),
+            "y": str(cy),
+            "text-anchor": "middle",
+            "dominant-baseline": "central",
+            "fill": text_color,
+            "font-family": style["font"],
+            "font-size": "13",
+            "font-weight": "500",
+        })
+        txt.text = label
+    else:
+        total_h = len(lines) * LINE_H
+        start_y = cy - total_h / 2 + LINE_H / 2
+        txt = ET.SubElement(g, "text", {
+            "x": str(cx),
+            "text-anchor": "middle",
+            "fill": text_color,
+            "font-family": style["font"],
+            "font-size": "13",
+            "font-weight": "500",
+        })
+        for i, line in enumerate(lines):
+            tspan = ET.SubElement(txt, "tspan", {
+                "x": str(cx),
+                "y": str(start_y + i * LINE_H),
+            })
+            tspan.text = line
 
 
 # ---------------------------------------------------------------------------
@@ -337,12 +434,121 @@ def add_defs(svg: ET.Element, used_types: set[str]) -> None:
         })
 
 
-def _node_bottom_center(pos: dict[str, int]) -> tuple[float, float]:
-    return pos["x"] + pos["w"] / 2, pos["y"] + pos["h"]
+def _port(pos: dict[str, int], side: str) -> tuple[float, float]:
+    """Return (x, y) for a connection port on a node."""
+    x, y, w, h = pos["x"], pos["y"], pos["w"], pos["h"]
+    cx, cy = x + w / 2, y + h / 2
+    if side == "top":
+        return cx, y
+    elif side == "bottom":
+        return cx, y + h
+    elif side == "left":
+        return x, cy
+    elif side == "right":
+        return x + w, cy
+    return cx, y + h  # default: bottom
 
 
-def _node_top_center(pos: dict[str, int]) -> tuple[float, float]:
-    return pos["x"] + pos["w"] / 2, pos["y"]
+def _detect_direction(src: dict[str, int], dst: dict[str, int]) -> tuple[str, str]:
+    """Auto-detect best source/target ports based on relative positions."""
+    scx = src["x"] + src["w"] / 2
+    scy = src["y"] + src["h"] / 2
+    dcx = dst["x"] + dst["w"] / 2
+    dcy = dst["y"] + dst["h"] / 2
+
+    dx = dcx - scx
+    dy = dcy - scy
+
+    # Same layer (horizontal) — use left/right
+    if abs(dy) < 30:
+        if dx > 0:
+            return "right", "left"
+        else:
+            return "left", "right"
+
+    # Forward (down) — use bottom/top
+    if dy > 0:
+        # If heavily offset horizontally, mix ports
+        if abs(dx) > abs(dy) * 1.5:
+            return ("right", "left") if dx > 0 else ("left", "right")
+        return "bottom", "top"
+
+    # Backward (up) — loop around the side
+    if abs(dx) > abs(dy) * 1.5:
+        return ("right", "left") if dx > 0 else ("left", "right")
+    # Go down-right then up to target
+    return "right", "right" if dx >= 0 else ("left", "left")
+
+
+def _build_path(x1: float, y1: float, x2: float, y2: float,
+                src_port: str, dst_port: str) -> str:
+    """Build a smooth cubic bezier path based on port directions."""
+    vertical_src = src_port in ("top", "bottom")
+    vertical_dst = dst_port in ("top", "bottom")
+
+    if vertical_src and vertical_dst:
+        # Normal top-to-bottom or bottom-to-top flow
+        cp_offset = max(40, abs(y2 - y1) * 0.4)
+        sign_s = 1 if src_port == "bottom" else -1
+        sign_d = -1 if dst_port == "top" else 1
+        return (f"M {x1:.1f} {y1:.1f} "
+                f"C {x1:.1f} {y1 + sign_s * cp_offset:.1f}, "
+                f"{x2:.1f} {y2 + sign_d * cp_offset:.1f}, "
+                f"{x2:.1f} {y2:.1f}")
+
+    if not vertical_src and not vertical_dst:
+        # Horizontal — left/right to left/right
+        cp_offset = max(40, abs(x2 - x1) * 0.4)
+        sign_s = 1 if src_port == "right" else -1
+        sign_d = -1 if dst_port == "left" else 1
+        return (f"M {x1:.1f} {y1:.1f} "
+                f"C {x1 + sign_s * cp_offset:.1f} {y1:.1f}, "
+                f"{x2 + sign_d * cp_offset:.1f} {y2:.1f}, "
+                f"{x2:.1f} {y2:.1f}")
+
+    # Mixed: one vertical, one horizontal — smooth L-shaped curve
+    if vertical_src:
+        # Source goes vertical, target is horizontal
+        sign_s = 1 if src_port == "bottom" else -1
+        mid_y = y1 + sign_s * max(40, abs(y2 - y1) * 0.5)
+        return (f"M {x1:.1f} {y1:.1f} "
+                f"C {x1:.1f} {mid_y:.1f}, "
+                f"{x1:.1f} {y2:.1f}, "
+                f"{x2:.1f} {y2:.1f}")
+    else:
+        # Source is horizontal, target goes vertical
+        sign_d = -1 if dst_port == "top" else 1
+        mid_x = x1 + (1 if src_port == "right" else -1) * max(40, abs(x2 - x1) * 0.5)
+        return (f"M {x1:.1f} {y1:.1f} "
+                f"C {mid_x:.1f} {y1:.1f}, "
+                f"{x2:.1f} {y1:.1f}, "
+                f"{x2:.1f} {y2:.1f}")
+
+
+def _label_position(x1: float, y1: float, x2: float, y2: float,
+                    positions: dict[str, dict[str, int]], edge: dict) -> tuple[float, float]:
+    """Find a label position that avoids overlapping nodes."""
+    lx = (x1 + x2) / 2
+    ly = (y1 + y2) / 2
+
+    # Check if midpoint overlaps any node
+    for nid, pos in positions.items():
+        from_id = edge.get("from") or edge.get("source")
+        to_id = edge.get("to") or edge.get("target")
+        if nid in (from_id, to_id):
+            continue
+        nx, ny = pos["x"] - 10, pos["y"] - 10
+        nr, nb = pos["x"] + pos["w"] + 10, pos["y"] + pos["h"] + 10
+        if nx < lx < nr and ny < ly < nb:
+            # Shift label away from node center
+            ncx = pos["x"] + pos["w"] / 2
+            if lx < ncx:
+                lx = nx - 30
+            else:
+                lx = nr + 30
+            break
+
+    return lx, ly
 
 
 def draw_edge(
@@ -351,11 +557,11 @@ def draw_edge(
     positions: dict[str, dict[str, int]],
     style: dict[str, str],
 ) -> None:
-    from_id = edge["from"]
-    to_id = edge["to"]
+    from_id = edge.get("from") or edge.get("source")
+    to_id = edge.get("to") or edge.get("target")
 
     if from_id not in positions or to_id not in positions:
-        return  # skip unknown nodes
+        return
 
     src = positions[from_id]
     dst = positions[to_id]
@@ -363,18 +569,12 @@ def draw_edge(
     etype = edge.get("type", "primary")
     cfg = EDGE_TYPES.get(etype, EDGE_TYPES["primary"])
 
-    x1, y1 = _node_bottom_center(src)
-    x2, y2 = _node_top_center(dst)
+    # Auto-detect port direction
+    src_port, dst_port = _detect_direction(src, dst)
+    x1, y1 = _port(src, src_port)
+    x2, y2 = _port(dst, dst_port)
 
-    # Cubic bezier control points (vertical flow)
-    cp_offset = max(40, abs(y2 - y1) * 0.45)
-    cp1_x, cp1_y = x1, y1 + cp_offset
-    cp2_x, cp2_y = x2, y2 - cp_offset
-
-    path_d = (
-        f"M {x1:.1f} {y1:.1f} "
-        f"C {cp1_x:.1f} {cp1_y:.1f}, {cp2_x:.1f} {cp2_y:.1f}, {x2:.1f} {y2:.1f}"
-    )
+    path_d = _build_path(x1, y1, x2, y2, src_port, dst_port)
 
     attrs: dict[str, str] = {
         "d": path_d,
@@ -388,13 +588,11 @@ def draw_edge(
 
     ET.SubElement(parent, "path", attrs)
 
-    # Optional label
+    # Optional label with smart placement
     label = edge.get("label")
     if label:
-        lx = (x1 + x2) / 2
-        ly = (y1 + y2) / 2
-        # Background pill
-        pad_x, pad_y = 6, 3
+        lx, ly = _label_position(x1, y1, x2, y2, positions, edge)
+        pad_x = 6
         char_w = 7.5
         lw = len(label) * char_w + pad_x * 2
         lh = 18
@@ -438,16 +636,16 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
 
     positions, canvas_w = compute_layout(nodes, edges)
 
-    # Canvas height: max layer + height of tallest node in that layer + margin
-    max_y = max(p["y"] + p["h"] for p in positions.values())
-    canvas_h = max_y + MARGIN + (32 if title else 0)
-
-    title_offset = 32 if title else 0
+    title_offset = 36 if title else 0
     if title:
-        # Shift all nodes down to make room for title
         for nid in positions:
             positions[nid]["y"] += title_offset
-        canvas_h += title_offset  # we already added title_offset once above; don't double
+
+    # Canvas sizing from actual content bounds
+    max_x = max(p["x"] + p["w"] for p in positions.values())
+    max_y = max(p["y"] + p["h"] for p in positions.values())
+    canvas_w = max(canvas_w, snap(max_x + MARGIN * 2))
+    canvas_h = snap(max_y + MARGIN * 2)
 
     svg = ET.Element("svg", {
         "xmlns": "http://www.w3.org/2000/svg",

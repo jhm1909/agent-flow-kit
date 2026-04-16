@@ -296,6 +296,9 @@ def to_float(v, d=0.0):
 def is_component_rect(el):
     if el.get('stroke-dasharray'):
         return False
+    # Skip inner double-border rects (llm shape) — fill="none" with small inset
+    if el.get('fill') == 'none' and el.get('stroke-width') == '1' and to_float(el.get('opacity', '1')) < 1:
+        return False
     w = to_float(el.get('width'))
     h = to_float(el.get('height'))
     if w > 700 or h > 500 or w < 40 or h < 20:
