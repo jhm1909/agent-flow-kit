@@ -28,28 +28,50 @@ from .routing import EdgeViewer
 
 DEFAULT_NODE_W = 140
 DEFAULT_NODE_H = 56
-CHAR_WIDTH = 7.5       # approximate px per character at 13px font
+CHAR_W_LATIN = 7.5     # approximate px per Latin character at 13px font
+CHAR_W_CJK = 13.0      # CJK (Korean, Chinese, Japanese) chars are ~1.7x wider
 MIN_NODE_W = 80
-MAX_NODE_W = 300
-H_SPACE = 80           # horizontal gap between nodes (spec: 80px)
-V_SPACE = 120          # vertical gap between layers (spec: 120px)
-MARGIN = 40            # canvas margin (spec: 40px)
-CONTAINER_PAD = 24     # padding inside container around its contents
-CONTAINER_HEADER = 32  # height reserved for container label
-ROUTE_CLEARANCE = 20   # minimum clearance from node edge for routing
+MAX_NODE_W = 360        # wider max for CJK text
+H_SPACE = 80            # horizontal gap between nodes (spec: 80px)
+V_SPACE = 120           # vertical gap between layers (spec: 120px)
+MARGIN = 40             # canvas margin (spec: 40px)
+CONTAINER_PAD = 24      # padding inside container around its contents
+CONTAINER_HEADER = 32   # height reserved for container label
+ROUTE_CLEARANCE = 20    # minimum clearance from node edge for routing
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _is_wide_char(ch: str) -> bool:
+    """Return True if character is CJK/fullwidth (needs ~2x width)."""
+    cp = ord(ch)
+    return (
+        0x2E80 <= cp <= 0x9FFF       # CJK Unified, Radicals, Kangxi
+        or 0xAC00 <= cp <= 0xD7AF    # Hangul Syllables (Korean)
+        or 0xF900 <= cp <= 0xFAFF    # CJK Compatibility
+        or 0xFE30 <= cp <= 0xFE4F    # CJK Compatibility Forms
+        or 0xFF00 <= cp <= 0xFF60    # Fullwidth Forms
+        or 0x1F000 <= cp <= 0x1FFFF  # Emoji
+        or 0x20000 <= cp <= 0x2FA1F  # CJK Extension B-F
+        or 0x3000 <= cp <= 0x303F    # CJK Symbols
+        or 0x3040 <= cp <= 0x30FF    # Hiragana + Katakana
+        or 0x31F0 <= cp <= 0x31FF    # Katakana Extensions
+    )
+
+
 def _estimate_text_width(label: str, font_size: float = 13) -> float:
-    return len(label) * CHAR_WIDTH * (font_size / 13)
+    """Estimate pixel width accounting for CJK/wide characters."""
+    scale = font_size / 13
+    return sum((CHAR_W_CJK if _is_wide_char(ch) else CHAR_W_LATIN) * scale for ch in label)
 
 
 def _auto_node_width(label: str) -> int:
-    text_w = _estimate_text_width(label)
-    padding = 24
+    # Handle multiline labels — use widest line
+    lines = label.split("\n") if label else [""]
+    text_w = max(_estimate_text_width(line) for line in lines)
+    padding = 24 * 2  # PAD_X on both sides
     w = max(MIN_NODE_W, min(MAX_NODE_W, int(text_w + padding)))
     return ((w + 7) // 8) * 8
 

@@ -17,7 +17,9 @@ import sys
 import xml.etree.ElementTree as ET
 from typing import Any
 
-# Ensure UTF-8 output on Windows
+# Ensure UTF-8 I/O on Windows (default is cp949/cp1252 which breaks CJK/Vietnamese)
+if sys.stdin.encoding != "utf-8":
+    sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8", errors="replace")
 if sys.stdout.encoding != "utf-8":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
@@ -102,10 +104,11 @@ GRID = 8
 LAYER_V_SPACING = 120
 H_SPACE = 80
 MARGIN = 40
-CHAR_W = 7.5
+CHAR_W_LATIN = 7.5
+CHAR_W_CJK = 13.0   # CJK (Korean, Chinese, Japanese) chars are ~1.7x wider
 PAD_X = 24
 MIN_W = 100
-MAX_W = 280
+MAX_W = 360          # Wider max for CJK text
 LINE_H = 18
 PAD_Y = 20
 
@@ -119,6 +122,31 @@ def snap(v: float) -> int:
     return int(round(v / GRID) * GRID)
 
 
+def _is_wide_char(ch: str) -> bool:
+    """Return True if character is CJK/fullwidth (needs ~2x width)."""
+    cp = ord(ch)
+    return (
+        0x2E80 <= cp <= 0x9FFF       # CJK Unified, Radicals, Kangxi
+        or 0xAC00 <= cp <= 0xD7AF    # Hangul Syllables (Korean)
+        or 0xF900 <= cp <= 0xFAFF    # CJK Compatibility
+        or 0xFE30 <= cp <= 0xFE4F    # CJK Compatibility Forms
+        or 0xFF00 <= cp <= 0xFF60    # Fullwidth Forms
+        or 0x1F000 <= cp <= 0x1FFFF  # Emoji
+        or 0x20000 <= cp <= 0x2FA1F  # CJK Extension B-F
+        or 0x3000 <= cp <= 0x303F    # CJK Symbols
+        or 0x3040 <= cp <= 0x30FF    # Hiragana + Katakana
+        or 0x31F0 <= cp <= 0x31FF    # Katakana Extensions
+    )
+
+
+def _text_width(text: str) -> float:
+    """Estimate pixel width of a text string, accounting for CJK/wide chars."""
+    w = 0.0
+    for ch in text:
+        w += CHAR_W_CJK if _is_wide_char(ch) else CHAR_W_LATIN
+    return w
+
+
 def _label_lines(label: str) -> list[str]:
     """Split label into lines on \\n."""
     return label.split("\n") if label else [""]
@@ -130,8 +158,8 @@ def _auto_size(node: dict) -> tuple[int, int]:
         return int(node["width"]), int(node["height"])
     label = node.get("label", node.get("id", ""))
     lines = _label_lines(label)
-    longest = max((len(line) for line in lines), default=0)
-    w = snap(max(MIN_W, min(MAX_W, longest * CHAR_W + PAD_X * 2)))
+    longest_w = max((_text_width(line) for line in lines), default=0)
+    w = snap(max(MIN_W, min(MAX_W, longest_w + PAD_X * 2)))
     h = snap(max(PAD_Y * 2, len(lines) * LINE_H + PAD_Y))
     if node.get("width"):
         w = int(node["width"])
@@ -593,8 +621,7 @@ def draw_edge(
     if label:
         lx, ly = _label_position(x1, y1, x2, y2, positions, edge)
         pad_x = 6
-        char_w = 7.5
-        lw = len(label) * char_w + pad_x * 2
+        lw = _text_width(label) + pad_x * 2
         lh = 18
 
         ET.SubElement(parent, "rect", {
@@ -687,6 +714,50 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
     node_map = {n["id"]: n for n in nodes}
     for nid, pos in positions.items():
         draw_node(node_group, node_map[nid], pos, style)
+
+    # Auto-legend when 2+ arrow types are used (rule: tech-diagram.md)
+    if len(used_types) >= 2:
+        LEGEND_LABELS = {
+            "primary": "Data flow",
+            "control": "Control",
+            "read": "Read",
+            "write": "Write",
+            "async": "Async",
+            "feedback": "Feedback",
+        }
+        legend_y = canvas_h - MARGIN
+        legend_x = MARGIN
+        lg = ET.SubElement(svg, "g", {"class": "legend"})
+        ET.SubElement(lg, "text", {
+            "x": str(legend_x), "y": str(legend_y - 4),
+            "fill": style["text"], "font-family": style["font"],
+            "font-size": "11", "font-weight": "600",
+        }).text = "Legend"
+        cur_x = legend_x
+        for etype in sorted(used_types):
+            cfg = EDGE_TYPES.get(etype, EDGE_TYPES["primary"])
+            label = LEGEND_LABELS.get(etype, etype.capitalize())
+            # Line sample
+            line_attrs: dict[str, str] = {
+                "x1": str(cur_x), "y1": str(legend_y + 10),
+                "x2": str(cur_x + 24), "y2": str(legend_y + 10),
+                "stroke": cfg["color"], "stroke-width": str(cfg["width"]),
+            }
+            if cfg["dash"]:
+                line_attrs["stroke-dasharray"] = cfg["dash"]
+            ET.SubElement(lg, "line", line_attrs)
+            # Label
+            ET.SubElement(lg, "text", {
+                "x": str(cur_x + 30), "y": str(legend_y + 14),
+                "fill": cfg["color"], "font-family": style["font"],
+                "font-size": "10", "font-weight": "500",
+            }).text = label
+            cur_x += _text_width(label) + 56
+        canvas_h += 40  # extend canvas for legend
+
+    # Update canvas size (legend may have extended it)
+    svg.set("height", str(canvas_h))
+    svg.set("viewBox", f"0 0 {canvas_w} {canvas_h}")
 
     return ET.tostring(svg, encoding="unicode", xml_declaration=False)
 
