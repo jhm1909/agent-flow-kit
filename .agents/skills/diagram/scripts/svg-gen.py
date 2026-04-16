@@ -213,8 +213,15 @@ def _auto_size(node: dict) -> tuple[int, int]:
         # Rectangular shapes: full width minus padding
         text_area_w = longest_w + PAD_X * 2
 
+    # Account for sublabel in width and height
+    sublabel = node.get("sublabel", "")
+    if sublabel:
+        sub_w = _text_width(sublabel) + PAD_X * 2
+        text_area_w = max(text_area_w, sub_w)
+
     w = snap(max(MIN_W, min(MAX_W, text_area_w)))
-    h = snap(max(PAD_Y * 2, len(lines) * LINE_H + PAD_Y))
+    extra_h = 16 if sublabel else 0  # extra space for sublabel
+    h = snap(max(PAD_Y * 2, len(lines) * LINE_H + PAD_Y + extra_h))
     if node.get("width"):
         w = int(node["width"])
     if node.get("height"):
@@ -425,7 +432,16 @@ def draw_node(
             "fill": fill, "stroke": stroke, "stroke-width": "1.5",
         })
 
-    elif shape in ("database", "cylinder", "memory"):
+    elif shape == "memory":
+        # Short-term memory: dashed rounded rect (per icons.md spec)
+        ET.SubElement(g, "rect", {
+            "x": str(x), "y": str(y), "width": str(w), "height": str(h),
+            "rx": "10", "ry": "10",
+            "fill": fill, "stroke": stroke, "stroke-width": "1.5",
+            "stroke-dasharray": "6,3",
+        })
+
+    elif shape in ("database", "cylinder"):
         body_d, top_d, _ry = _cylinder_path(x, y, w, h)
         ET.SubElement(g, "path", {
             "d": body_d,
@@ -547,11 +563,15 @@ def draw_node(
         })
 
     # Label text (centred, with multiline support)
+    sublabel = node.get("sublabel")
     lines = _label_lines(label)
+    # Adjust vertical center if sublabel present
+    label_cy = cy - (6 if sublabel else 0)
+
     if len(lines) == 1:
         txt = ET.SubElement(g, "text", {
             "x": str(cx),
-            "y": str(cy),
+            "y": str(label_cy),
             "text-anchor": "middle",
             "dominant-baseline": "central",
             "fill": text_color,
@@ -562,7 +582,7 @@ def draw_node(
         txt.text = label
     else:
         total_h = len(lines) * LINE_H
-        start_y = cy - total_h / 2 + LINE_H / 2
+        start_y = label_cy - total_h / 2 + LINE_H / 2
         txt = ET.SubElement(g, "text", {
             "x": str(cx),
             "text-anchor": "middle",
@@ -577,6 +597,21 @@ def draw_node(
                 "y": str(start_y + i * LINE_H),
             })
             tspan.text = line
+
+    # Sublabel (smaller, muted text below main label)
+    if sublabel:
+        sub_y = label_cy + (len(lines) * LINE_H / 2 if len(lines) > 1 else 0) + 14
+        ET.SubElement(g, "text", {
+            "x": str(cx),
+            "y": str(sub_y),
+            "text-anchor": "middle",
+            "dominant-baseline": "central",
+            "fill": text_color,
+            "font-family": style["font"],
+            "font-size": "10",
+            "font-weight": "400",
+            "opacity": "0.6",
+        }).text = sublabel
 
 
 # ---------------------------------------------------------------------------
@@ -716,9 +751,13 @@ def _build_path(x1: float, y1: float, x2: float, y2: float,
                 f"{x2:.1f} {y2:.1f}")
 
 
+# Track placed label positions to avoid label-to-label collisions
+_placed_labels: list[tuple[float, float, float, float]] = []
+
+
 def _label_position(x1: float, y1: float, x2: float, y2: float,
                     positions: dict[str, dict[str, int]], edge: dict) -> tuple[float, float]:
-    """Find a label position that avoids overlapping nodes."""
+    """Find a label position that avoids overlapping nodes AND other labels."""
     lx = (x1 + x2) / 2
     ly = (y1 + y2) / 2
 
@@ -731,7 +770,6 @@ def _label_position(x1: float, y1: float, x2: float, y2: float,
         nx, ny = pos["x"] - 10, pos["y"] - 10
         nr, nb = pos["x"] + pos["w"] + 10, pos["y"] + pos["h"] + 10
         if nx < lx < nr and ny < ly < nb:
-            # Shift label away from node center
             ncx = pos["x"] + pos["w"] / 2
             if lx < ncx:
                 lx = nx - 30
@@ -739,6 +777,23 @@ def _label_position(x1: float, y1: float, x2: float, y2: float,
                 lx = nr + 30
             break
 
+    # Check label-to-label collision: shift vertically if overlap
+    label_text = edge.get("label", "")
+    lw = _text_width(label_text) + 12
+    lh = 18
+    for attempt in range(5):
+        collision = False
+        for (px, py, pw, ph) in _placed_labels:
+            ox = max(0, min(lx + lw / 2, px + pw / 2) - max(lx - lw / 2, px - pw / 2))
+            oy = max(0, min(ly + lh / 2, py + ph / 2) - max(ly - lh / 2, py - ph / 2))
+            if ox > 0 and oy > 0:
+                collision = True
+                ly += 20  # shift down by 20px
+                break
+        if not collision:
+            break
+
+    _placed_labels.append((lx, ly, lw, lh))
     return lx, ly
 
 
@@ -816,6 +871,9 @@ def draw_edge(
 # ---------------------------------------------------------------------------
 
 def build_svg(data: dict, style_name: str = "flat-icon") -> str:
+    global _placed_labels
+    _placed_labels = []  # Reset label collision tracker
+
     style = STYLES.get(style_name, STYLES["flat-icon"])
 
     nodes: list[dict] = data.get("nodes", [])
@@ -845,11 +903,33 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
         "viewBox": f"0 0 {canvas_w} {canvas_h}",
     })
 
-    # Background
-    ET.SubElement(svg, "rect", {
-        "width": "100%", "height": "100%",
-        "fill": style["bg"],
-    })
+    # Background (enhanced for glassmorphism with gradient + glow)
+    if style_name == "glassmorphism":
+        bg_defs = svg.find("defs") or ET.SubElement(svg, "defs")
+        # Diagonal gradient
+        grad = ET.SubElement(bg_defs, "linearGradient", {
+            "id": "bgGrad", "x1": "0%", "y1": "0%", "x2": "100%", "y2": "100%",
+        })
+        ET.SubElement(grad, "stop", {"offset": "0%", "stop-color": "#0d1117"})
+        ET.SubElement(grad, "stop", {"offset": "50%", "stop-color": "#161b22"})
+        ET.SubElement(grad, "stop", {"offset": "100%", "stop-color": "#0d1117"})
+        ET.SubElement(svg, "rect", {"width": "100%", "height": "100%", "fill": "url(#bgGrad)"})
+        # Ambient glow spots
+        for gid, cx_pct, cy_pct, color in [
+            ("glowBlue", "30%", "35%", "rgba(88,166,255,0.12)"),
+            ("glowPurple", "70%", "65%", "rgba(188,140,255,0.10)"),
+        ]:
+            rg = ET.SubElement(bg_defs, "radialGradient", {
+                "id": gid, "cx": cx_pct, "cy": cy_pct, "r": "40%",
+            })
+            ET.SubElement(rg, "stop", {"offset": "0%", "stop-color": color})
+            ET.SubElement(rg, "stop", {"offset": "100%", "stop-color": "rgba(0,0,0,0)"})
+            ET.SubElement(svg, "rect", {"width": "100%", "height": "100%", "fill": f"url(#{gid})"})
+    else:
+        ET.SubElement(svg, "rect", {
+            "width": "100%", "height": "100%",
+            "fill": style["bg"],
+        })
 
     # Title
     if title:
