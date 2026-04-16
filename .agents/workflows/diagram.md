@@ -135,22 +135,22 @@ For each missing dimension, provide **concrete options (A/B/C/D)** based on cont
 
 ⛔ **NEVER write SVG markup directly. ALWAYS use the Python scripts.** AI-generated SVG has broken layouts. The scripts have layout engines that handle positioning, routing, and spacing correctly.
 
-1. **Invoke `[diagram]` skill** — save JSON to temp file:
+1. **Choose a descriptive base name** based on diagram content (e.g., `auth-flow`, `rag-pipeline`, `payment-sequence`). Use this same name for both JSON and SVG files. Never use generic names like `input`, `output`, or `diagram`.
+
+2. **Save JSON to temp file**:
    ```bash
    mkdir -p .agents-output/diagram/tmp .agents-output/diagram/svg
-   # Write JSON to .agents-output/diagram/tmp/input.json
+   # Write JSON to .agents-output/diagram/tmp/<descriptive-name>.json
    ```
-
-2. **Choose a descriptive filename** based on diagram content (e.g., `auth-flow.svg`, `rag-pipeline.svg`, `payment-sequence.svg`). Never use generic names like `output.svg` or `diagram.svg`.
 
 3. Choose generator based on complexity:
    - **6+ nodes, containers, swim lanes** → use `generate-from-template.py`:
      ```bash
-     python3 skills/diagram/scripts/generate-from-template.py <type> <descriptive-name>.svg -i .agents-output/diagram/tmp/input.json
+     python3 skills/diagram/scripts/generate-from-template.py <type> <descriptive-name>.svg -i .agents-output/diagram/tmp/<descriptive-name>.json
      ```
    - **≤5 nodes, simple structure** → use `svg-gen.py`:
      ```bash
-     cat .agents-output/diagram/tmp/input.json | python3 skills/diagram/scripts/svg-gen.py -o <descriptive-name>.svg --style <style>
+     cat .agents-output/diagram/tmp/<descriptive-name>.json | python3 skills/diagram/scripts/svg-gen.py -o <descriptive-name>.svg --style <style>
      ```
 
 4. Check exit code — 0 = success.

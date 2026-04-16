@@ -75,7 +75,7 @@ Combine all missing items into **ONE question**. After user responds, if partial
 
 ## Name output files descriptively
 
-- **Diagrams**: name after diagram content — `auth-flow.svg`, `rag-pipeline.svg`, `payment-sequence.svg`
+- **Diagrams**: name after diagram content — use the same base name for both JSON and SVG (e.g., `auth-flow.json` → `auth-flow.svg`)
 - **Architecture**: name after project or scope — `myapp-architecture.svg`, `backend-modules.svg`
 - **Reports**: name after analysis type — `blast-radius-auth.json`, `hub-detect-api.json`
 - **Never** use generic names like `output.svg`, `diagram.svg`, `result.json`

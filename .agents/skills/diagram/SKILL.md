@@ -241,22 +241,22 @@ For exact style specs (colors, fonts, effects): `references/style-N-*.md`
 
 ### Generation process
 
-1. **Save JSON to file** (avoids shell escaping issues on Windows):
+1. **Choose a descriptive base name** based on diagram content (e.g., `auth-flow`, `rag-pipeline`). Use this same name for both JSON and SVG. Never use generic names like `input`, `output`, or `diagram`.
+
+2. **Save JSON to file** (avoids shell escaping issues on Windows):
    ```bash
    mkdir -p .agents-output/diagram/tmp
    # Write your JSON to:
-   .agents-output/diagram/tmp/input.json
+   .agents-output/diagram/tmp/<descriptive-name>.json
    ```
-
-2. **Choose a descriptive filename** based on diagram content (e.g., `auth-flow.svg`, `rag-pipeline.svg`). Never use generic names like `output.svg`.
 
 3. **Run the script**:
    ```bash
    # Complex diagrams
-   python3 scripts/generate-from-template.py <type> <descriptive-name>.svg -i .agents-output/diagram/tmp/input.json
+   python3 scripts/generate-from-template.py <type> <descriptive-name>.svg -i .agents-output/diagram/tmp/<descriptive-name>.json
 
    # Simple diagrams (auto-layout)
-   cat .agents-output/diagram/tmp/input.json | python3 scripts/svg-gen.py -o <descriptive-name>.svg --style <style>
+   cat .agents-output/diagram/tmp/<descriptive-name>.json | python3 scripts/svg-gen.py -o <descriptive-name>.svg --style <style>
    ```
 
 4. Output goes to `.agents-output/diagram/svg/` automatically. If a file with the same name exists, a counter is appended (`_1`, `_2`, ...) — previous diagrams are never overwritten.
