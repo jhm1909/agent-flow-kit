@@ -133,6 +133,8 @@ For each missing dimension, provide **concrete options (A/B/C/D)** based on cont
 
 // turbo
 
+⛔ **NEVER write SVG markup directly. ALWAYS use the Python scripts.** AI-generated SVG has broken layouts. The scripts have layout engines that handle positioning, routing, and spacing correctly.
+
 1. **Invoke `[diagram]` skill** — save JSON to temp file:
    ```bash
    mkdir -p .agents-output/diagram/tmp .agents-output/diagram/svg

@@ -620,10 +620,30 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Invalid JSON: {exc}", file=sys.stderr)
         return 1
 
+    # Pre-flight validation
+    nodes = data.get("nodes", [])
+    edges = data.get("edges", [])
+    if len(nodes) < 2:
+        print(f"Error: need at least 2 nodes, got {len(nodes)}.", file=sys.stderr)
+        return 1
+    if len(edges) == 0:
+        print("Error: no edges defined. Diagram would have no connections.", file=sys.stderr)
+        return 1
+    node_ids = {n.get("id") for n in nodes}
+    for e in edges:
+        src = e.get("from") or e.get("source")
+        tgt = e.get("to") or e.get("target")
+        if src not in node_ids:
+            print(f"Error: edge references unknown source node '{src}'. Valid IDs: {node_ids}", file=sys.stderr)
+            return 1
+        if tgt not in node_ids:
+            print(f"Error: edge references unknown target node '{tgt}'. Valid IDs: {node_ids}", file=sys.stderr)
+            return 1
+
     # Warn if input has features this script doesn't support
     if "containers" in data:
         print("Warning: svg-gen.py ignores 'containers'. For container/swim-lane support, use generate-from-template.py instead.", file=sys.stderr)
-    if any("x" in n and "y" in n for n in data.get("nodes", [])):
+    if any("x" in n and "y" in n for n in nodes):
         print("Warning: svg-gen.py ignores absolute x/y positions. It uses auto-layout based on 'layer' field.", file=sys.stderr)
 
     # Redirect output (respects --output-dir if given)

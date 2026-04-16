@@ -1472,7 +1472,9 @@ def build_svg(template_type: str, data: Dict[str, object]) -> str:
             if auto_result.get("_canvas_height"):
                 height = max(height, auto_result["_canvas_height"])
         except ImportError:
-            pass  # layout engine not available, proceed with raw positions
+            print("Error: nodes lack x/y positions and layout engine is not available.", file=sys.stderr)
+            print("Fix: either add x/y to every node in JSON, or install the layout engine.", file=sys.stderr)
+            sys.exit(1)
 
     normalized_nodes = [normalize_node(node, f"node-{idx}") for idx, node in enumerate(nodes_data)]
     node_map = {node.node_id: node for node in normalized_nodes}
@@ -1599,6 +1601,27 @@ def main() -> None:
             data = json.loads(args.json_arg)
         else:
             data = json.load(sys.stdin)
+
+        # Pre-flight validation
+        nodes = data.get("nodes", [])
+        arrows = data.get("arrows", []) or data.get("edges", [])
+        if len(nodes) < 2:
+            print(f"Error: need at least 2 nodes, got {len(nodes)}.", file=sys.stderr)
+            sys.exit(1)
+        if len(arrows) == 0:
+            print("Error: no edges/arrows defined. Diagram would have no connections.", file=sys.stderr)
+            sys.exit(1)
+        node_ids = {n.get("id") for n in nodes}
+        for a in arrows:
+            src = a.get("from") or a.get("source")
+            tgt = a.get("to") or a.get("target")
+            if src and src not in node_ids:
+                print(f"Error: edge references unknown source '{src}'. Valid: {node_ids}", file=sys.stderr)
+                sys.exit(1)
+            if tgt and tgt not in node_ids:
+                print(f"Error: edge references unknown target '{tgt}'. Valid: {node_ids}", file=sys.stderr)
+                sys.exit(1)
+
         svg_content = build_svg(args.template_type, data)
         with open(output_path, "w", encoding="utf-8") as handle:
             handle.write(svg_content)

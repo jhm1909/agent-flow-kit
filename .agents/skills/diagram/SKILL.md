@@ -230,6 +230,8 @@ For exact style specs (colors, fonts, effects): `references/style-N-*.md`
 
 ## Step 5: Generate SVG
 
+⛔ **NEVER write SVG markup directly.** You MUST use the scripts below. AI-generated SVG produces overlapping nodes, missing edges, and broken layouts. The scripts have layout engines that prevent these issues.
+
 ### Choose the right script
 
 | Diagram complexity | Script | Why |

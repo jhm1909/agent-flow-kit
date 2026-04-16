@@ -16,6 +16,18 @@ Detect the language of the user's message and respond in that **same language**.
 - Mixed languages → use the dominant language of the message
 - Code, file paths, CLI commands, and technical terms (e.g., "flowchart", "architecture", "SVG") stay in English regardless of response language
 
+## ⛔ Never write SVG directly
+
+You are **FORBIDDEN** from generating SVG markup yourself. All SVG output **MUST** be produced by running one of these scripts:
+- `svg-gen.py` — simple diagrams with auto-layout
+- `generate-from-template.py` — complex diagrams with containers/routing
+
+**Why**: AI-generated SVG consistently produces overlapping nodes, missing edges, broken layouts, and incorrect coordinates. The scripts have built-in layout engines (Sugiyama, orthogonal routing) that prevent these issues.
+
+**What to do instead**: Build the JSON input → save to temp file → run the script → validate output.
+
+If you catch yourself writing `<svg>`, `<rect>`, `<path>`, `<line>`, or any SVG tag directly — **STOP IMMEDIATELY** and use the scripts instead.
+
 ## Think before acting
 
 - **Classify first**: identify the diagram type or review scope BEFORE generating anything.

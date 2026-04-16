@@ -278,7 +278,104 @@ else
     WARNINGS=$((WARNINGS + 1))
 fi
 
-# Check 6: Closing </svg> tag
+# Check 6: Geometric validation (overlap, missing edges, layout spread)
+echo -n "Checking geometric quality... "
+GEO_RESULT=$(PYTHONIOENCODING=utf-8 $PYTHON - "$SVG_FILE" <<'PY'
+from pathlib import Path
+import re
+import sys
+import xml.etree.ElementTree as ET
+
+def strip(tag):
+    return tag.split('}', 1)[-1]
+
+def to_float(v, d=0.0):
+    try: return float(v)
+    except: return d
+
+def is_component_rect(el):
+    if el.get('stroke-dasharray'):
+        return False
+    w = to_float(el.get('width'))
+    h = to_float(el.get('height'))
+    if w > 700 or h > 500 or w < 40 or h < 20:
+        return False
+    return True
+
+root = ET.fromstring(Path(sys.argv[1]).read_text(encoding='utf-8'))
+vb = root.get('viewBox', '0 0 960 700').split()
+canvas_w, canvas_h = float(vb[2]), float(vb[3])
+
+# Collect component bounding boxes
+nodes = []
+for el in root.iter():
+    tag = strip(el.tag)
+    if tag == 'rect' and is_component_rect(el):
+        x, y = to_float(el.get('x')), to_float(el.get('y'))
+        w, h = to_float(el.get('width')), to_float(el.get('height'))
+        nodes.append((x, y, x + w, y + h))
+    elif tag == 'ellipse':
+        rx, ry = to_float(el.get('rx')), to_float(el.get('ry'))
+        if rx >= 20 and ry >= 15:
+            cx, cy = to_float(el.get('cx')), to_float(el.get('cy'))
+            nodes.append((cx - rx, cy - ry, cx + rx, cy + ry))
+    elif tag == 'circle':
+        r = to_float(el.get('r'))
+        if r >= 20:
+            cx, cy = to_float(el.get('cx')), to_float(el.get('cy'))
+            nodes.append((cx - r, cy - r, cx + r, cy + r))
+
+# Count edges (lines/paths with markers)
+edge_count = 0
+for el in root.iter():
+    tag = strip(el.tag)
+    if tag in ('line', 'path', 'polyline') and el.get('marker-end'):
+        edge_count += 1
+
+failures = []
+
+# Check A: Node overlap — any two nodes intersect by more than 10px
+for i in range(len(nodes)):
+    for j in range(i + 1, len(nodes)):
+        a, b = nodes[i], nodes[j]
+        ox = max(0, min(a[2], b[2]) - max(a[0], b[0]))
+        oy = max(0, min(a[3], b[3]) - max(a[1], b[1]))
+        if ox > 10 and oy > 10:
+            failures.append(f"OVERLAP: nodes at ({a[0]:.0f},{a[1]:.0f}) and ({b[0]:.0f},{b[1]:.0f}) overlap by {ox:.0f}x{oy:.0f}px")
+
+# Check B: Missing edges — diagram has nodes but no connections
+if len(nodes) >= 2 and edge_count == 0:
+    failures.append(f"NO_EDGES: {len(nodes)} nodes found but 0 edges - diagram has no connections")
+
+# Check C: Layout spread — all nodes crammed into small area
+if len(nodes) >= 3:
+    all_x = [n[0] for n in nodes] + [n[2] for n in nodes]
+    all_y = [n[1] for n in nodes] + [n[3] for n in nodes]
+    spread_w = max(all_x) - min(all_x)
+    spread_h = max(all_y) - min(all_y)
+    usage = (spread_w * spread_h) / (canvas_w * canvas_h) if canvas_w * canvas_h > 0 else 0
+    if usage < 0.08:
+        failures.append(f"CRAMPED: nodes use only {usage*100:.1f}% of canvas ({spread_w:.0f}x{spread_h:.0f}px in {canvas_w:.0f}x{canvas_h:.0f}px)")
+
+if failures:
+    for f in failures:
+        print(f"FAIL: {f}")
+    print(f"TOTAL:{len(failures)}")
+else:
+    print("OK")
+PY
+)
+
+if echo "$GEO_RESULT" | grep -q "^OK$"; then
+    echo -e "${GREEN}✓ Pass${NC}"
+else
+    FAIL_COUNT=$(echo "$GEO_RESULT" | grep "^TOTAL:" | sed 's/TOTAL://')
+    echo -e "${RED}✗ Fail${NC} (${FAIL_COUNT} geometric issue(s))"
+    echo "$GEO_RESULT" | grep "^FAIL:" | sed 's/^FAIL: /  /'
+    FAILURES=$((FAILURES + FAIL_COUNT))
+fi
+
+# Check 7: Closing </svg> tag
 echo -n "Checking closing tag... "
 if grep -q '</svg>' "$SVG_FILE"; then
     echo -e "${GREEN}✓ Pass${NC}"
@@ -287,7 +384,7 @@ else
     FAILURES=$((FAILURES + 1))
 fi
 
-# Check 7: rsvg-convert validation
+# Check 8: rsvg-convert validation
 echo -n "Running rsvg-convert validation... "
 if command -v rsvg-convert &> /dev/null; then
     if rsvg-convert "$SVG_FILE" -o /tmp/test-output.png 2>/dev/null; then
