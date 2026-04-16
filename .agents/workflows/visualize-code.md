@@ -67,7 +67,7 @@ description: Auto-generates architecture diagram from codebase analysis. Chains 
    bash skills/diagram/scripts/validate-svg.sh .agents-output/visualize/svg/<descriptive-name>.svg
    ```
 
-3. If validation fails → fix and regenerate (follow diagram skill's 3-strike protocol).
+4. If validation fails → fix and regenerate (follow diagram skill's 3-strike protocol).
 
 **Output**: Architecture SVG in `.agents-output/visualize/svg/`
 

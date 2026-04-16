@@ -62,14 +62,30 @@ else
     FAILURES=$((FAILURES + 1))
 fi
 
-# Check 2: Quote check
+# Check 2: Quote check (only inside XML tags, not text content)
 echo -n "Checking attribute quotes... "
-UNQUOTED=$( { grep -oE '[a-z-]+=[^"'\''> ]' "$SVG_FILE" || true; } | wc -l | tr -d ' ' )
+UNQUOTED=$($PYTHON - "$SVG_FILE" <<'PY'
+import re, sys
+from pathlib import Path
+
+text = Path(sys.argv[1]).read_text(encoding='utf-8')
+# Extract only content inside XML tags (between < and >)
+tags = re.findall(r'<[^>]+>', text)
+count = 0
+for tag in tags:
+    # Skip processing instructions and comments
+    if tag.startswith('<?') or tag.startswith('<!'):
+        continue
+    # Find unquoted attributes: name=value where value doesn't start with " or '
+    matches = re.findall(r'\s([a-z][a-z0-9-]*)=([^"\x27\s>])', tag)
+    count += len(matches)
+print(count)
+PY
+)
 if [ "$UNQUOTED" -eq 0 ]; then
     echo -e "${GREEN}✓ Pass${NC}"
 else
     echo -e "${RED}✗ Fail${NC} (${UNQUOTED} unquoted attributes)"
-    grep -n -oE '[a-z-]+=[^"'\''> ]' "$SVG_FILE" | head -5 || true
     FAILURES=$((FAILURES + 1))
 fi
 
