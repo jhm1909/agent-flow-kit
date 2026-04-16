@@ -104,10 +104,9 @@ For each missing dimension, provide **concrete options (A/B/C/D)** based on cont
 
 ### Rules for crafting options:
 - **Options MUST be context-aware** — infer from the user's topic, not generic. If user says "payment system", suggest payment-related components, not auth components.
-- **Option A** = simplest/most common interpretation
-- **Option B** = moderate complexity
-- **Option C** = most detailed/comprehensive
-- **Option D** = always "Something else / Custom" for free-form input
+- **Number of options is flexible** — use as many or as few as make sense (2–6+). Don't force exactly 4 if only 2 are meaningful, and don't limit to 4 if 6 good options exist.
+- **Order by complexity** — simplest first, most detailed last
+- **Always include one free-form option** as the last choice ("Something else / Custom")
 - User can **mix and modify**: "1B, but add Redis for session caching"
 - After user picks, if minor gaps remain → state assumptions and proceed (no second round of questions)
 - **Style** is the ONLY dimension you may auto-detect without asking

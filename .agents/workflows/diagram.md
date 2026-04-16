@@ -63,7 +63,8 @@ For each missing dimension, provide **concrete options (A/B/C/D)** based on cont
 
 ### Rules:
 - **Options MUST be context-aware** — tailor to the user's topic, not generic
-- **A** = simplest, **B** = moderate, **C** = most detailed, **D** = custom/free-form
+- **Number of options is flexible** — 2–6+ per question, as many as make sense. Don't force 4 if only 2 are meaningful.
+- Order by complexity — simplest first, most detailed last. Always end with a free-form option.
 - User can mix and modify: "1B, but add Redis for caching"
 - **ONE round** of questions max — after user picks, proceed
 - **Style** is the ONLY thing you may auto-detect
