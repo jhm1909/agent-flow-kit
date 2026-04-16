@@ -1,17 +1,26 @@
 """
-icons.py — Inline SVG icon registry for svg-gen.py
+icons.py — SVG icon registry for svg-gen.py
 
-Icons are Lucide-compatible (MIT license): viewBox 0 0 24 24, stroke-based,
-stroke-linecap="round", stroke-linejoin="round", fill="none".
+Three-tier icon loading:
+  1. BUILTIN_ICONS (24 curated) — always available, zero overhead
+  2. lucide/icon-nodes.json (1695 icons) — lazy-loaded if downloaded
+  3. Fallback — no icon, just shape
 
-Each icon is a list of SVG element strings. They are rendered at 16x16
-in the top-right corner of nodes, using the current style's stroke color.
+Run `bash fetch-icons.sh` to download the full Lucide library.
+Icons are Lucide-compatible (MIT license): viewBox 0 0 24 24, stroke-based.
 """
+
+import json
+import os
+
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_LUCIDE_DIR = os.path.join(_SCRIPT_DIR, "lucide")
+_LUCIDE_CACHE: dict[str, list[str]] | None = None  # lazy-loaded
 
 # fmt: off
 
 # All paths use viewBox 0 0 24 24. Rendered at 16x16 with transform scale.
-ICONS: dict[str, list[str]] = {
+BUILTIN_ICONS: dict[str, list[str]] = {
 
     "database": [
         '<ellipse cx="12" cy="5" rx="9" ry="3"/>',
@@ -176,6 +185,76 @@ ICONS: dict[str, list[str]] = {
 
 
 # ---------------------------------------------------------------------------
+# Lucide icon-nodes.json lazy loader (1695 icons)
+# ---------------------------------------------------------------------------
+
+def _load_lucide_icons() -> dict[str, list[str]]:
+    """Load full Lucide icon set from icon-nodes.json if available.
+
+    Converts Lucide's [[element, {attrs}], ...] format to SVG element strings.
+    Returns empty dict if file not found (not downloaded yet).
+    """
+    global _LUCIDE_CACHE
+    if _LUCIDE_CACHE is not None:
+        return _LUCIDE_CACHE
+
+    nodes_path = os.path.join(_LUCIDE_DIR, "icon-nodes.json")
+    if not os.path.exists(nodes_path):
+        _LUCIDE_CACHE = {}
+        return _LUCIDE_CACHE
+
+    try:
+        with open(nodes_path, "r", encoding="utf-8") as f:
+            raw = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        _LUCIDE_CACHE = {}
+        return _LUCIDE_CACHE
+
+    result: dict[str, list[str]] = {}
+    for name, elements in raw.items():
+        svg_parts: list[str] = []
+        for elem in elements:
+            if not isinstance(elem, list) or len(elem) < 2:
+                continue
+            tag = elem[0]
+            attrs = elem[1] if isinstance(elem[1], dict) else {}
+            attr_str = " ".join(f'{k}="{v}"' for k, v in attrs.items())
+            svg_parts.append(f"<{tag} {attr_str}/>")
+        if svg_parts:
+            result[name] = svg_parts
+
+    _LUCIDE_CACHE = result
+    return _LUCIDE_CACHE
+
+
+def get_icon(name: str) -> list[str] | None:
+    """Get icon SVG elements by name. Checks built-in first, then Lucide cache."""
+    if name in BUILTIN_ICONS:
+        return BUILTIN_ICONS[name]
+    lucide = _load_lucide_icons()
+    return lucide.get(name)
+
+
+# Unified accessor — used by svg-gen.py
+class _IconRegistry:
+    """Dict-like accessor that merges built-in + Lucide icons."""
+    def __contains__(self, name: str) -> bool:
+        return name in BUILTIN_ICONS or name in _load_lucide_icons()
+
+    def __getitem__(self, name: str) -> list[str]:
+        result = get_icon(name)
+        if result is None:
+            raise KeyError(name)
+        return result
+
+    def get(self, name: str, default=None):
+        return get_icon(name) or default
+
+
+ICONS = _IconRegistry()
+
+
+# ---------------------------------------------------------------------------
 # Auto-detect icon from shape type or label keywords
 # ---------------------------------------------------------------------------
 
@@ -265,7 +344,7 @@ def detect_icon(node: dict) -> str | None:
     if explicit is not None:
         if explicit == "none" or explicit == "":
             return None
-        return explicit if explicit in ICONS else None
+        return explicit if explicit in ICONS else explicit  # try anyway, Lucide may have it
 
     label_lower = (node.get("label", "") + " " + node.get("sublabel", "")).lower()
     shape = node.get("shape", node.get("kind", "rect"))

@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 
 .agents-output/
+
+# Downloaded Lucide icons (run fetch-icons.sh to get them)
+.agents/skills/diagram/scripts/lucide/
