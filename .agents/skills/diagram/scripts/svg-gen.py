@@ -1058,35 +1058,67 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
             "async": "Async",
             "feedback": "Feedback",
         }
-        legend_y = canvas_h - MARGIN
-        legend_x = MARGIN
+
+        # Calculate legend dimensions first
+        sorted_types = sorted(used_types)
+        item_widths = []
+        for etype in sorted_types:
+            label = LEGEND_LABELS.get(etype, etype.capitalize())
+            item_widths.append(36 + _text_width(label) + 20)  # line(36) + text + gap
+        total_items_w = sum(item_widths)
+        legend_box_w = total_items_w + 80  # padding + "Legend" label
+        legend_box_h = 36
+        legend_x = max(MARGIN, (canvas_w - legend_box_w) / 2)  # center horizontally
+        legend_y = canvas_h + 8  # below content with gap
+        canvas_h += legend_box_h + 24  # extend canvas
+
         lg = ET.SubElement(svg, "g", {"class": "legend"})
+
+        # Background box
+        ET.SubElement(lg, "rect", {
+            "x": str(legend_x - 12),
+            "y": str(legend_y - 4),
+            "width": str(legend_box_w + 24),
+            "height": str(legend_box_h),
+            "rx": "6",
+            "fill": style["bg"],
+            "stroke": style["node_stroke"],
+            "stroke-width": "0.75",
+            "opacity": "0.9",
+        })
+
+        # "Legend" title
         ET.SubElement(lg, "text", {
-            "x": str(legend_x), "y": str(legend_y - 4),
+            "x": str(legend_x), "y": str(legend_y + 15),
             "fill": style["text"], "font-family": style["font"],
-            "font-size": "11", "font-weight": "600",
+            "font-size": "10", "font-weight": "700",
+            "opacity": "0.7",
         }).text = "Legend"
-        cur_x = legend_x
-        for etype in sorted(used_types):
+
+        cur_x = legend_x + 52
+        for etype in sorted_types:
             cfg = _get_edge_cfg(etype, style_name)
             label = LEGEND_LABELS.get(etype, etype.capitalize())
-            # Line sample
+            line_y = legend_y + 15
+
+            # Line sample (longer: 32px, with arrowhead marker)
             line_attrs: dict[str, str] = {
-                "x1": str(cur_x), "y1": str(legend_y + 10),
-                "x2": str(cur_x + 24), "y2": str(legend_y + 10),
-                "stroke": cfg["color"], "stroke-width": str(cfg["width"]),
+                "x1": str(cur_x), "y1": str(line_y),
+                "x2": str(cur_x + 32), "y2": str(line_y),
+                "stroke": cfg["color"], "stroke-width": str(max(2, cfg["width"])),
+                "stroke-linecap": "round",
             }
             if cfg["dash"]:
                 line_attrs["stroke-dasharray"] = cfg["dash"]
             ET.SubElement(lg, "line", line_attrs)
-            # Label
+
+            # Label text
             ET.SubElement(lg, "text", {
-                "x": str(cur_x + 30), "y": str(legend_y + 14),
+                "x": str(cur_x + 38), "y": str(line_y + 4),
                 "fill": cfg["color"], "font-family": style["font"],
                 "font-size": "10", "font-weight": "500",
             }).text = label
-            cur_x += _text_width(label) + 56
-        canvas_h += 40  # extend canvas for legend
+            cur_x += 36 + _text_width(label) + 20
 
     # Update canvas size (legend may have extended it)
     svg.set("height", str(canvas_h))

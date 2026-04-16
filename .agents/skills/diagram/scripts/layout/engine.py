@@ -257,6 +257,12 @@ def _layout_with_containers(
         }
 
     # Step 2: create super-nodes for each container + keep top-level nodes
+    # Build node-to-container mapping
+    node_to_container: dict[str, str] = {}
+    for cid, cdata in container_map.items():
+        for n in cdata["nodes"]:
+            node_to_container[n["id"]] = cid
+
     super_nodes = list(groups.get(None, []))
     for cid, cdata in container_map.items():
         super_nodes.append({
@@ -266,17 +272,30 @@ def _layout_with_containers(
             "height": cdata["height"],
         })
 
-    # Get edges between top-level nodes and containers
-    container_node_ids = set()
-    for cid, cdata in container_map.items():
-        for n in cdata["nodes"]:
-            container_node_ids.add(n["id"])
+    # Map cross-container edges to super-node edges
+    # Edge from node_a (in container_X) to node_b (in container_Y)
+    # → becomes edge from __container__X to __container__Y
+    top_edges: list[dict] = []
+    seen_top_edges: set[tuple[str, str]] = set()
 
-    top_edges = [
-        e for e in edges
-        if e.get("from", e.get("source", "")) not in container_node_ids
-        or e.get("to", e.get("target", "")) not in container_node_ids
-    ]
+    for e in edges:
+        src = e.get("from", e.get("source", ""))
+        tgt = e.get("to", e.get("target", ""))
+        src_c = node_to_container.get(src)
+        tgt_c = node_to_container.get(tgt)
+
+        # Map to super-node IDs
+        top_src = f"__container__{src_c}" if src_c else src
+        top_tgt = f"__container__{tgt_c}" if tgt_c else tgt
+
+        # Skip internal edges (same container) and self-loops
+        if top_src == top_tgt:
+            continue
+
+        edge_key = (top_src, top_tgt)
+        if edge_key not in seen_top_edges:
+            seen_top_edges.add(edge_key)
+            top_edges.append({"from": top_src, "to": top_tgt, "type": e.get("type", "primary")})
 
     # Step 3: layout top-level graph
     top_result = _layout_flat(super_nodes, top_edges)
