@@ -17,6 +17,14 @@ import sys
 import xml.etree.ElementTree as ET
 from typing import Any
 
+# Icon system
+try:
+    from icons import ICONS, detect_icon
+except ImportError:
+    ICONS = {}
+    def detect_icon(node: dict) -> str | None:  # type: ignore
+        return None
+
 # Ensure UTF-8 I/O on Windows (default is cp949/cp1252 which breaks CJK/Vietnamese)
 if sys.stdin.encoding != "utf-8":
     sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8", errors="replace")
@@ -612,6 +620,33 @@ def draw_node(
             "font-weight": "400",
             "opacity": "0.6",
         }).text = sublabel
+
+    # Icon badge (top-right corner, 16x16)
+    icon_name = detect_icon(node)
+    if icon_name and icon_name in ICONS:
+        icon_size = 14
+        icon_scale = icon_size / 24  # Lucide icons are 24x24
+        # Position: top-right corner with padding
+        icon_x = x + w - icon_size - 5
+        icon_y = y + 4
+        icon_g = ET.SubElement(g, "g", {
+            "transform": f"translate({icon_x},{icon_y}) scale({icon_scale:.4f})",
+            "fill": "none",
+            "stroke": stroke,
+            "stroke-width": "2",
+            "stroke-linecap": "round",
+            "stroke-linejoin": "round",
+            "opacity": "0.5",
+        })
+        for svg_el_str in ICONS[icon_name]:
+            try:
+                el = ET.fromstring(f"<svg xmlns='http://www.w3.org/2000/svg'>{svg_el_str}</svg>")
+                for child in el:
+                    # Strip namespace
+                    child.tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
+                    icon_g.append(child)
+            except ET.ParseError:
+                pass  # Skip malformed icon elements
 
 
 # ---------------------------------------------------------------------------
