@@ -74,10 +74,10 @@ Purpose:    ✅ or ❌ — [reason]
 
 Combine all ❌ items into **ONE message**. Example:
 
-> "Để tạo diagram chất lượng, tôi cần biết thêm:
-> 1. **Loại diagram**: bạn muốn architecture, flowchart, hay sequence?
-> 2. **Thành phần**: cụ thể gồm service/component nào?
-> 3. **Mục đích**: dùng cho docs, slides, hay README?"
+> "To create a quality diagram, I need a bit more info:
+> 1. **Diagram type**: architecture, flowchart, or sequence?
+> 2. **Components**: which specific services/components should be included?
+> 3. **Purpose**: is this for docs, slides, or a README?"
 
 ### Rules:
 - Ask **at most ONE round** of questions
@@ -85,10 +85,10 @@ Combine all ❌ items into **ONE message**. Example:
 - **Style** is the ONLY dimension you may auto-detect without asking
 
 ### What counts as "sufficient" — be strict:
-- ❌ "vẽ diagram authentication" → Subject vague, no components, no type
-- ❌ "diagram cho hệ thống của tôi" → Everything missing
-- ❌ "vẽ kiến trúc backend" → Has type, but no components named
-- ✅ "vẽ flowchart login: user nhập credentials → validate → check 2FA → OTP → success" → All clear
+- ❌ "draw a diagram of authentication" → Subject vague, no components, no type
+- ❌ "diagram for my system" → Everything missing
+- ❌ "draw backend architecture" → Has type, but no components named
+- ✅ "draw a login flowchart: user enters credentials → validate → check 2FA → OTP → success" → All clear
 
 ---
 

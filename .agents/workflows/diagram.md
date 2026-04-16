@@ -36,10 +36,10 @@ Purpose:    ✅ or ❌ — [what user said or didn't say]
 ### If ANY dimension is ❌ → STOP. Ask ONE combined question. Do NOT proceed.
 
 Example:
-> "Để tạo diagram chất lượng, tôi cần biết thêm:
-> 1. **Loại diagram**: architecture, flowchart, hay sequence?
-> 2. **Thành phần**: cụ thể gồm service/component nào?
-> 3. **Mục đích**: dùng cho docs, slides, hay README?"
+> "To create a quality diagram, I need a bit more info:
+> 1. **Diagram type**: architecture, flowchart, or sequence?
+> 2. **Components**: which specific services/components should be included?
+> 3. **Purpose**: is this for docs, slides, or a README?"
 
 ### Rules:
 - **ONE round** of questions max
@@ -47,9 +47,9 @@ Example:
 - **Style** is the ONLY thing you may auto-detect
 
 ### Examples — be strict:
-- ❌ "vẽ diagram authentication" → no type, no components, no purpose
-- ❌ "vẽ kiến trúc backend" → no components named
-- ✅ "vẽ flowchart login: user nhập credentials → validate → 2FA → OTP → success" → all clear
+- ❌ "draw a diagram of authentication" → no type, no components, no purpose
+- ❌ "draw backend architecture" → no components named
+- ✅ "draw a login flowchart: user enters credentials → validate → check 2FA → OTP → success" → all clear
 
 **WAIT** for user response before proceeding.
 
