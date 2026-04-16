@@ -364,8 +364,19 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
         max_x = max(max_x, x + w)
         max_y = max(max_y, y + h)
 
+    # Normalize: shift content so min is at MARGIN
     offset_x = MARGIN - min_x if min_x != float("inf") else 0
     offset_y = MARGIN - min_y if min_y != float("inf") else 0
+
+    # Compute content bounds and canvas size
+    content_w = (max_x - min_x) if max_x != float("-inf") else 0
+    content_h = (max_y - min_y) if max_y != float("-inf") else 0
+    canvas_w = max(960, _snap(content_w + 2 * MARGIN))
+    canvas_h = max(400, _snap(content_h + 2 * MARGIN))
+
+    # Center content horizontally on canvas
+    center_offset_x = _snap((canvas_w - content_w) / 2) - MARGIN
+    offset_x += center_offset_x
 
     # Position nodes
     positioned_nodes = []
@@ -412,14 +423,11 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
         edge_data["_route"] = route
         positioned_edges.append(edge_data)
 
-    canvas_w = _snap(max_x + offset_x + MARGIN) if max_x != float("-inf") else 960
-    canvas_h = _snap(max_y + offset_y + MARGIN) if max_y != float("-inf") else 600
-
     return {
         "nodes": positioned_nodes,
         "edges": positioned_edges,
-        "width": max(960, canvas_w),
-        "height": max(400, canvas_h),
+        "width": canvas_w,
+        "height": canvas_h,
     }
 
 
