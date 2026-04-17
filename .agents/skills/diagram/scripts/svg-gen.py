@@ -992,7 +992,22 @@ def draw_edge(
     # Optional label with smart placement
     label = edge.get("label")
     if label:
-        lx, ly = _label_position(x1, y1, x2, y2, positions, edge)
+        # For orthogonal routes: place label on midpoint of longest segment
+        # (avoids placing label on bends or very short segments)
+        if route and len(route) >= 3:
+            longest_len = 0
+            longest_mid = ((x1 + x2) / 2, (y1 + y2) / 2)
+            for i in range(len(route) - 1):
+                p1, p2 = route[i], route[i + 1]
+                seg_len = abs(p2[0] - p1[0]) + abs(p2[1] - p1[1])  # Manhattan
+                if seg_len > longest_len:
+                    longest_len = seg_len
+                    longest_mid = ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+            lx, ly = longest_mid
+            # Still check node/label collisions
+            lx, ly = _label_position(lx, ly, lx, ly, positions, edge)
+        else:
+            lx, ly = _label_position(x1, y1, x2, y2, positions, edge)
         pad_x = 6
         lw = _text_width(label) + pad_x * 2
         lh = 18
@@ -1238,6 +1253,12 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
         total_items_w = sum(item_widths)
         legend_box_w = total_items_w + 80  # padding + "Legend" label
         legend_box_h = 36
+
+        # Extend canvas if legend is wider than current canvas
+        required_canvas_w = legend_box_w + 24 + 2 * MARGIN
+        if required_canvas_w > canvas_w:
+            canvas_w = snap(required_canvas_w)
+
         legend_x = max(MARGIN, (canvas_w - legend_box_w) / 2)  # center horizontally
         legend_y = canvas_h + 8  # below content with gap
         canvas_h += legend_box_h + 24  # extend canvas
