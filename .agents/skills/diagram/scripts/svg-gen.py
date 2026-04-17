@@ -241,12 +241,14 @@ def compute_layout(
     nodes: list[dict],
     edges: list[dict] | None = None,
     containers: list[dict] | None = None,
-) -> tuple[dict[str, dict[str, int]], int, list[dict]]:
+) -> tuple[dict[str, dict[str, int]], int, list[dict], dict[tuple[str, str], list[tuple[int, int]]]]:
     """
     Assign (x, y, w, h) to every node using Sugiyama hierarchical layout.
-    Returns (positions, canvas_w, positioned_containers).
+    Returns (positions, canvas_w, positioned_containers, edge_routes).
+    edge_routes maps (from_id, to_id) -> list of (x,y) waypoints for orthogonal routing.
     """
     positioned_containers: list[dict] = []
+    edge_routes: dict[tuple[str, str], list[tuple[int, int]]] = {}
 
     try:
         from layout.engine import compute_layout as _engine_layout
@@ -259,7 +261,14 @@ def compute_layout(
             positions[n["id"]] = {"x": n["x"], "y": n["y"], "w": n["width"], "h": n["height"]}
         canvas_w = result.get("_canvas_width", 960)
         positioned_containers = result.get("containers", [])
-        return positions, canvas_w, positioned_containers
+        # Extract orthogonal routes from engine
+        for e in result.get("edges", []):
+            src = e.get("from") or e.get("source", "")
+            tgt = e.get("to") or e.get("target", "")
+            route = e.get("_route")
+            if src and tgt and route and len(route) >= 2:
+                edge_routes[(src, tgt)] = route
+        return positions, canvas_w, positioned_containers, edge_routes
     except ImportError:
         pass
 
@@ -354,7 +363,7 @@ def compute_layout(
             positions[nid] = {"x": cur_x, "y": y_top + y_offset, "w": w, "h": h}
             cur_x = snap(cur_x + w + H_SPACE)
 
-    return positions, canvas_w, []  # no containers in fallback layout
+    return positions, canvas_w, [], {}  # no containers or routes in fallback layout
 
 
 # ---------------------------------------------------------------------------
@@ -785,6 +794,49 @@ def _detect_direction(
     return "bottom", "top"
 
 
+def _build_orthogonal_path(waypoints: list[tuple[int, int]], corner_radius: float = 8) -> str:
+    """Build SVG path from orthogonal waypoints with rounded corners.
+
+    waypoints: [(x0,y0), (x1,y1), ..., (xn,yn)] — alternating horizontal/vertical segments.
+    corner_radius: radius for smoothing corners between segments.
+    """
+    if len(waypoints) < 2:
+        return ""
+    if len(waypoints) == 2:
+        return f"M {waypoints[0][0]} {waypoints[0][1]} L {waypoints[1][0]} {waypoints[1][1]}"
+
+    parts: list[str] = [f"M {waypoints[0][0]} {waypoints[0][1]}"]
+    for i in range(1, len(waypoints) - 1):
+        px, py = waypoints[i - 1]
+        cx, cy = waypoints[i]
+        nx, ny = waypoints[i + 1]
+
+        # Vector from prev to corner, and corner to next
+        dx1 = cx - px
+        dy1 = cy - py
+        dx2 = nx - cx
+        dy2 = ny - cy
+        len1 = (dx1 * dx1 + dy1 * dy1) ** 0.5 or 1
+        len2 = (dx2 * dx2 + dy2 * dy2) ** 0.5 or 1
+
+        # Clamp radius to half of each segment length
+        r = min(corner_radius, len1 / 2, len2 / 2)
+
+        # Start of corner: back off from (cx,cy) along prev direction
+        sx = cx - dx1 / len1 * r
+        sy = cy - dy1 / len1 * r
+        # End of corner: forward from (cx,cy) along next direction
+        ex = cx + dx2 / len2 * r
+        ey = cy + dy2 / len2 * r
+
+        parts.append(f"L {sx:.1f} {sy:.1f}")
+        parts.append(f"Q {cx} {cy} {ex:.1f} {ey:.1f}")
+
+    # Final segment to last waypoint
+    parts.append(f"L {waypoints[-1][0]} {waypoints[-1][1]}")
+    return " ".join(parts)
+
+
 def _build_path(x1: float, y1: float, x2: float, y2: float,
                 src_port: str, dst_port: str, is_feedback: bool = False) -> str:
     """Build a smooth cubic bezier path based on port directions."""
@@ -891,6 +943,7 @@ def draw_edge(
     positions: dict[str, dict[str, int]],
     style: dict[str, str],
     style_name: str = "flat-icon",
+    edge_routes: dict[tuple[str, str], list[tuple[int, int]]] | None = None,
 ) -> None:
     from_id = edge.get("from") or edge.get("source")
     to_id = edge.get("to") or edge.get("target")
@@ -905,16 +958,24 @@ def draw_edge(
     cfg = _get_edge_cfg(etype, style_name)
     is_feedback = etype == "feedback"
 
-    # Auto-detect port direction
-    src_port, dst_port = _detect_direction(src, dst, is_feedback)
+    # Try orthogonal routing from engine first
+    route = None
+    if edge_routes:
+        route = edge_routes.get((from_id, to_id))
 
-    # Port spreading: offset when multiple edges connect to same port
-    src_offset = _get_port_offset(from_id, src_port, src["w"])
-    dst_offset = _get_port_offset(to_id, dst_port, dst["w"])
-    x1, y1 = _port(src, src_port, src_offset)
-    x2, y2 = _port(dst, dst_port, dst_offset)
-
-    path_d = _build_path(x1, y1, x2, y2, src_port, dst_port, is_feedback)
+    if route and len(route) >= 2 and not is_feedback:
+        # Use orthogonal waypoints from engine
+        path_d = _build_orthogonal_path(route, corner_radius=10)
+        x1, y1 = route[0]
+        x2, y2 = route[-1]
+    else:
+        # Fallback: bezier routing (for feedback or when engine unavailable)
+        src_port, dst_port = _detect_direction(src, dst, is_feedback)
+        src_offset = _get_port_offset(from_id, src_port, src["w"])
+        dst_offset = _get_port_offset(to_id, dst_port, dst["w"])
+        x1, y1 = _port(src, src_port, src_offset)
+        x2, y2 = _port(dst, dst_port, dst_offset)
+        path_d = _build_path(x1, y1, x2, y2, src_port, dst_port, is_feedback)
 
     attrs: dict[str, str] = {
         "d": path_d,
@@ -1028,7 +1089,7 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
     # Auto-assign layers if not provided (topological sort from edges)
     _auto_assign_layers(nodes, edges)
 
-    positions, canvas_w, positioned_containers = compute_layout(nodes, edges, containers)
+    positions, canvas_w, positioned_containers, edge_routes = compute_layout(nodes, edges, containers)
 
     title_offset = 36 if title else 0
     if title:
@@ -1037,6 +1098,12 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
         # Also offset containers
         for c in positioned_containers:
             c["y"] = c.get("y", 0) + title_offset
+        # Also offset edge route waypoints
+        if edge_routes:
+            shifted_routes: dict[tuple[str, str], list[tuple[int, int]]] = {}
+            for key, wps in edge_routes.items():
+                shifted_routes[key] = [(x, y + title_offset) for x, y in wps]
+            edge_routes = shifted_routes
 
     # Canvas sizing from actual content bounds
     max_x = max(p["x"] + p["w"] for p in positions.values())
@@ -1138,7 +1205,7 @@ def build_svg(data: dict, style_name: str = "flat-icon") -> str:
     # Edges (drawn before nodes so they appear behind)
     edge_group = ET.SubElement(svg, "g", {"class": "edges"})
     for edge in edges:
-        draw_edge(edge_group, edge, positions, style, style_name)
+        draw_edge(edge_group, edge, positions, style, style_name, edge_routes)
 
     # Nodes (with shadow filter if available)
     node_attrs: dict[str, str] = {"class": "nodes"}
