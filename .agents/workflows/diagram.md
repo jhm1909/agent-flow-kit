@@ -143,14 +143,14 @@ For each missing dimension, provide **concrete options (A/B/C/D)** based on cont
    # Write JSON to .agents-output/diagram/tmp/<descriptive-name>.json
    ```
 
-3. Choose generator based on complexity:
-   - **6+ nodes, containers, swim lanes** → use `generate-from-template.py`:
-     ```bash
-     python3 skills/diagram/scripts/generate-from-template.py <type> <descriptive-name>.svg -i .agents-output/diagram/tmp/<descriptive-name>.json
-     ```
-   - **≤5 nodes, simple structure** → use `svg-gen.py`:
+3. Choose generator:
+   - **Default → `svg-gen.py`** (handles everything: auto-layout, containers/swim-lanes, icons, orthogonal routing, CJK, all 7 styles):
      ```bash
      cat .agents-output/diagram/tmp/<descriptive-name>.json | python3 skills/diagram/scripts/svg-gen.py -o <descriptive-name>.svg --style <style>
+     ```
+   - **Only when** user provides pre-positioned nodes with explicit `x`/`y` coordinates → use `generate-from-template.py`:
+     ```bash
+     python3 skills/diagram/scripts/generate-from-template.py <type> <descriptive-name>.svg -i .agents-output/diagram/tmp/<descriptive-name>.json
      ```
 
 4. Check exit code — 0 = success.

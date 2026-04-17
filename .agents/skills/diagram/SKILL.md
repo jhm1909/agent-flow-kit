@@ -235,10 +235,10 @@ For exact style specs (colors, fonts, effects): `references/style-N-*.md`
 
 ### Choose the right script
 
-| Diagram complexity | Script | Why |
+| Input type | Script | Why |
 |---|---|---|
-| **Complex**: containers, swim lanes, port routing, 6+ nodes | `generate-from-template.py` | Full routing, collision avoidance |
-| **Simple**: just nodes + edges, ≤5 nodes | `svg-gen.py` | Fast, auto-layout via Sugiyama |
+| **Default — any diagram** | `svg-gen.py` | Auto-layout, containers, icons, orthogonal routing, 7 styles, CJK |
+| **Pre-positioned nodes** with explicit x/y | `generate-from-template.py` | Respects manual coordinates, template-based |
 
 ### Generation process
 
