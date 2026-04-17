@@ -448,7 +448,15 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
     # Compute content bounds and canvas size
     content_w = (max_x - min_x) if max_x != float("-inf") else 0
     content_h = (max_y - min_y) if max_y != float("-inf") else 0
-    canvas_w = max(960, _snap(content_w + 2 * MARGIN))
+    # Adaptive canvas width: shrink below 960 if content is very narrow
+    # (avoids 87% wasted space on vertical-only CJK diagrams)
+    desired_w = _snap(content_w + 2 * MARGIN)
+    if content_h > content_w * 2:
+        # Tall/narrow diagram — allow canvas as narrow as 480px
+        canvas_w = max(480, desired_w)
+    else:
+        # Normal aspect — keep 960px minimum for readability
+        canvas_w = max(960, desired_w)
     canvas_h = max(400, _snap(content_h + 2 * MARGIN))
 
     # Center content horizontally on canvas
