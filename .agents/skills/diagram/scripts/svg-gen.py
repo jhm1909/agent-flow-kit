@@ -26,8 +26,9 @@ except ImportError:
         return None
 
 # Ensure UTF-8 I/O on Windows (default is cp949/cp1252 which breaks CJK/Vietnamese)
+# Use errors="strict" so bad encoding fails loudly instead of silently producing "?"
 if sys.stdin.encoding != "utf-8":
-    sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8", errors="replace")
+    sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding="utf-8", errors="strict")
 if sys.stdout.encoding != "utf-8":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
@@ -1454,6 +1455,20 @@ def main(argv: list[str] | None = None) -> int:
     if len(edges) == 0:
         print("Error: no edges defined. Diagram would have no connections.", file=sys.stderr)
         return 1
+
+    # Warn if labels contain suspicious replacement chars (encoding corruption indicator)
+    def _has_encoding_corruption(s: str) -> bool:
+        if not s:
+            return False
+        # U+FFFD (replacement char) or 3+ consecutive ? indicates decode failure
+        return "\ufffd" in s or "???" in s
+    for n in nodes:
+        label = (n.get("label", "") or "") + (n.get("sublabel", "") or "")
+        if _has_encoding_corruption(label):
+            print(f"Warning: node '{n.get('id')}' label contains replacement chars — possible encoding issue (expected UTF-8 JSON).", file=sys.stderr)
+    for e in edges:
+        if _has_encoding_corruption(e.get("label", "") or ""):
+            print(f"Warning: edge label '{e.get('label')}' contains replacement chars — possible encoding issue.", file=sys.stderr)
 
     # Check for duplicate node IDs
     seen_ids: set[str] = set()
