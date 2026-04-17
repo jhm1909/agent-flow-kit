@@ -1044,19 +1044,21 @@ def _auto_assign_layers(nodes: list[dict], edges: list[dict]) -> None:
     all_ids = {n["id"] for n in nodes}
     roots = all_ids - set(parents.keys())
     if not roots:
-        roots = {nodes[0]["id"]}  # fallback: first node
+        # Pure cycle: pick first node as root (breaks the cycle for BFS)
+        roots = {nodes[0]["id"]}
 
-    # BFS layer assignment
+    # BFS layer assignment — each node visited at most once (cycle-safe)
     layers: dict[str, int] = {}
     queue = list(roots)
     for r in roots:
         layers[r] = 0
+    visited = set(roots)
     while queue:
         nid = queue.pop(0)
         for child in children.get(nid, []):
-            new_layer = layers[nid] + 1
-            if child not in layers or layers[child] < new_layer:
-                layers[child] = new_layer
+            if child not in visited:
+                visited.add(child)
+                layers[child] = layers[nid] + 1
                 queue.append(child)
 
     # Apply to nodes
@@ -1431,6 +1433,29 @@ def main(argv: list[str] | None = None) -> int:
     if len(edges) == 0:
         print("Error: no edges defined. Diagram would have no connections.", file=sys.stderr)
         return 1
+
+    # Check for duplicate node IDs
+    seen_ids: set[str] = set()
+    dup_ids: list[str] = []
+    for n in nodes:
+        nid = n.get("id")
+        if nid is None:
+            print(f"Error: node missing 'id' field: {n}", file=sys.stderr)
+            return 1
+        if nid in seen_ids:
+            dup_ids.append(nid)
+        seen_ids.add(nid)
+    if dup_ids:
+        print(f"Error: duplicate node IDs: {dup_ids}. Each node must have a unique id.", file=sys.stderr)
+        return 1
+
+    # Check for self-loops on non-feedback edges (would create visual noise)
+    for e in edges:
+        src = e.get("from") or e.get("source")
+        tgt = e.get("to") or e.get("target")
+        if src == tgt and e.get("type") != "feedback":
+            print(f"Warning: self-loop on node '{src}' (edge type '{e.get('type','primary')}'). Consider type='feedback' or removing.", file=sys.stderr)
+
     node_ids = {n.get("id") for n in nodes}
     for e in edges:
         src = e.get("from") or e.get("source")

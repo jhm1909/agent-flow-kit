@@ -249,7 +249,11 @@ def segment_hits_bounds(p1, p2, bounds):
 
     return False
 
-root = ET.fromstring(Path(sys.argv[1]).read_text(encoding='utf-8'))
+try:
+    root = ET.fromstring(Path(sys.argv[1]).read_text(encoding='utf-8'))
+except ET.ParseError:
+    print(0)  # Can't check collisions on malformed XML — tag balance check catches it
+    sys.exit(0)
 obstacles = [bounds for element in root.iter() if (bounds := shape_bounds(element)) is not None]
 
 collisions = 0
@@ -321,7 +325,11 @@ def is_component_rect(el):
         return False
     return True
 
-root = ET.fromstring(Path(sys.argv[1]).read_text(encoding='utf-8'))
+try:
+    root = ET.fromstring(Path(sys.argv[1]).read_text(encoding='utf-8'))
+except ET.ParseError:
+    print("OK")  # Tag balance check already caught malformed XML
+    sys.exit(0)
 vb = root.get('viewBox', '0 0 960 700').split()
 canvas_w, canvas_h = float(vb[2]), float(vb[3])
 

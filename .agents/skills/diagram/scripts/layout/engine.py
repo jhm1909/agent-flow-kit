@@ -390,13 +390,38 @@ def _layout_flat(nodes: list[dict], edges: list[dict]) -> dict:
     else:
         adaptive_v = max(72, 88 - (num_nodes - 14) * 3)
 
-    # Layout each connected component
+    # Layout each connected component — shift each horizontally to avoid overlap
+    component_x_offset = 0
     for component in g.C:
         sug = SugiyamaLayout(component)
         sug.xspace = H_SPACE
         sug.yspace = adaptive_v
         sug.init_all()
         sug.draw()
+
+        # Find this component's width and shift it
+        comp_min_x = float("inf")
+        comp_max_x = float("-inf")
+        comp_vertices = [v for v in component.sV]
+        for v in comp_vertices:
+            if v.view.xy is None:
+                continue
+            cx = v.view.xy[0]
+            w = v.view.w
+            comp_min_x = min(comp_min_x, cx - w / 2)
+            comp_max_x = max(comp_max_x, cx + w / 2)
+
+        if comp_min_x == float("inf"):
+            continue
+
+        # Shift this component so it starts at component_x_offset
+        shift = component_x_offset - comp_min_x
+        for v in comp_vertices:
+            if v.view.xy is not None:
+                v.view.xy = (v.view.xy[0] + shift, v.view.xy[1])
+
+        # Update offset for next component
+        component_x_offset += (comp_max_x - comp_min_x) + H_SPACE + 40
 
     # Read positions back and normalize
     min_x = float("inf")
